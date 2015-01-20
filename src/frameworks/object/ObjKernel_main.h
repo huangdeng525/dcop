@@ -53,6 +53,7 @@ private:
 
 private:
     objLock *m_pLock;
+    objTask *m_pTask;
 };
 
 

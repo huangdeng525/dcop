@@ -67,6 +67,7 @@ objBase::~objBase()
 CFrameKernel::CFrameKernel()
 {
     m_pLock = DCOP_CreateLock();
+    m_pTask = 0;
 }
 
 /*******************************************************
@@ -83,6 +84,12 @@ CFrameKernel::~CFrameKernel()
     {
         delete m_pLock;
         m_pLock = 0;
+    }
+
+    if (m_pTask)
+    {
+        delete m_pTask;
+        m_pTask = 0;
     }
 }
 
@@ -128,6 +135,8 @@ void CFrameKernel::Leave()
  *******************************************************/
 objBase *CFrameKernel::Start(const char *cfgDeploy)
 {
+    if (!m_pTask) m_pTask = DCOP_CreateTask("EntryTask", NULL, 0, 0, 0);
+
     /////////////////////////////////////////////////
     /// 加载管理器内所有对象
     /////////////////////////////////////////////////
@@ -151,6 +160,8 @@ objBase *CFrameKernel::Start(const char *cfgDeploy)
 
     TRACE_LOG(STR_FORMAT("System(%d) InitAllObjects OK!", piManager->GetSystemID()));
     piManager->Dump(PrintToConsole, 0, 0, 0);
+
+    osBase::Dump(PrintToConsole, 0, 0, 0);
 
     return piManager;
 }
