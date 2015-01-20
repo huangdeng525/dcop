@@ -145,7 +145,7 @@ void osBase::Dump(LOG_PRINT logPrint, LOG_PARA logPara, int argc, void **argv)
     tableStr << "Name";
     tableStr << "ID";
     tableStr << "Handle";
-    tableStr << "objPtr";
+    tableStr << "Ptr";
 
     DCOP_START_TIME();
 

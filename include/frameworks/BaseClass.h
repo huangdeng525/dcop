@@ -68,21 +68,48 @@ INTF_VER(Instance, 1, 0, 0);
 
 
 /// -------------------------------------------------
-/// 对象基础类(定义虚析构行为)
+/// 实例基础类(定义虚析构行为)
 /// -------------------------------------------------
 class objBase
 {
 public:
+    /// 这里获得基类的全局实例(即:框架内核对象)
+    static objBase *GetInstance();
+
     /// 所有基类均为虚析构
     virtual ~objBase() = 0;
 
-    /// 进入和退出基类临界区
-    static void Enter();
-    static void Leave();
+    /// 进入和离开的互斥保护
+    ///     互斥保护: 由实例实现者自己来对入口进行保护(默认为空实现)
+    ///     使用方法: 可在入口函数开始使用AutoObjLock(this)来简化操作
+    virtual void Enter() {}
+    virtual void Leave() {}
 
-    /// 框架基类的入口和出口
-    static objBase *Start(const char *xmlFile);
-    static void End(objBase *pBase);
+    /// Dump入口
+    ///     变参使用: 实现时请按约定的顺序获取各个指针参数并输出
+    virtual void Dump(LOG_PRINT logPrint, LOG_PARA logPara, int argc, void **argv) {}
+
+    /// 部署一个新的系统(使用部署配置文件)
+    virtual objBase *Start(const char *cfgDeploy) {return 0;}
+    virtual void End(objBase *pBase) {}
+};
+
+
+/// -------------------------------------------------
+/// 自动对象锁，用于实例入口函数自动加锁和解锁
+/// -------------------------------------------------
+#define AutoObjLock(x) AutoObjLockLine(x, __LINE__)
+#define AutoObjLockLine(x, line) AutoObjLockLineEx(x, line)
+#define AutoObjLockLineEx(x, line) AutoObjLockEx __tmp_##line(x)
+class AutoObjLockEx
+{
+public:
+    AutoObjLockEx() {m_piBase = 0;}
+    AutoObjLockEx(objBase *piBase) {m_piBase = piBase; if (m_piBase) m_piBase->Enter();}
+    ~AutoObjLockEx() {if (m_piBase) m_piBase->Leave();}
+
+private:
+    objBase *m_piBase;
 };
 
 
@@ -203,7 +230,7 @@ DWORD CMyClass::GetRef(Instance ***pppirs)          \
     if (g_onInstanceGetRef && pppirs)               \
         g_onInstanceGetRef(this, pppirs,            \
         g_onInstanceGetRefPara);                    \
-    return m_refCount;                              \
+    return (DWORD)m_refCount;                       \
 }                                                   \
 DWORD CMyClass::Release(Instance *pir)              \
 {                                                   \

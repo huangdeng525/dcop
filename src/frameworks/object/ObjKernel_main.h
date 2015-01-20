@@ -13,6 +13,7 @@
 #include "Manager_if.h"
 #include "xml/xml.h"
 #include "array/darray.h"
+#include "sem.h"
 
 
 /// 参数字符串最大长度
@@ -31,11 +32,17 @@ class CFrameKernel : public objBase, private osBase
 {
 public:
     static CFrameKernel sm_instance;
-    static objLock *sm_pLock;
 
     CFrameKernel();
     ~CFrameKernel();
 
+    void Enter();
+    void Leave();
+
+    objBase *Start(const char *cfgDeploy);
+    void End(objBase *pBase);
+
+private:
     IManager *Load(const char *xmlFile);
 
 private:
@@ -43,6 +50,9 @@ private:
     DWORD GetXmlChildValue(const XMLElement *pXMLElement, CDArray &rArgs);
     void  GetArgList(DWORD argc, char **argv, const CDArray &crArgs);
     DWORD CreateAllObjects(IManager *piManager, const XMLElement *pXMLElement);
+
+private:
+    objLock *m_pLock;
 };
 
 

@@ -10,38 +10,9 @@
 
 
 /// -------------------------------------------------
-/// 自动构造
-/// -------------------------------------------------
-void vConstructKernelFunc()
-{
-    if (!CFrameKernel::sm_pLock)
-    {
-        CFrameKernel::sm_pLock = DCOP_CreateLock();
-    }
-}
-
-/// -------------------------------------------------
-/// 自动析构
-/// -------------------------------------------------
-void vReleaseKernelFunc()
-{
-    if (CFrameKernel::sm_pLock)
-    {
-        delete CFrameKernel::sm_pLock;
-        CFrameKernel::sm_pLock = 0;
-    }
-}
-
-/// -------------------------------------------------
-/// 自动编译
-/// -------------------------------------------------
-CPPBUILDUNIT_AUTO(vConstructKernelFunc, vReleaseKernelFunc);
-
-/// -------------------------------------------------
 /// 全局内核资源和实例
 /// -------------------------------------------------
 CFrameKernel    CFrameKernel::sm_instance;
-objLock *       CFrameKernel::sm_pLock = 0;
 void          (*g_onInstanceQueryInterface)(
                         Instance *piThis, 
                         Instance *piRefer, 
@@ -61,6 +32,19 @@ void *          g_onInstanceGetRefPara = 0;
 
 
 /*******************************************************
+  函 数 名: objBase::GetInstance
+  描    述: 获取内核实例
+  输    入: 
+  输    出: 
+  返    回: 
+  修改记录: 
+ *******************************************************/
+objBase *objBase::GetInstance()
+{
+    return &CFrameKernel::sm_instance;
+}
+
+/*******************************************************
   函 数 名: objBase::~objBase
   描    述: 虚构实现
   输    入: 
@@ -73,51 +57,81 @@ objBase::~objBase()
 }
 
 /*******************************************************
-  函 数 名: objBase::Enter
+  函 数 名: CFrameKernel::CFrameKernel
+  描    述: CFrameKernel构造
+  输    入: 
+  输    出: 
+  返    回: 
+  修改记录: 
+ *******************************************************/
+CFrameKernel::CFrameKernel()
+{
+    m_pLock = DCOP_CreateLock();
+}
+
+/*******************************************************
+  函 数 名: CFrameKernel::~CFrameKernel
+  描    述: CFrameKernel析构
+  输    入: 
+  输    出: 
+  返    回: 
+  修改记录: 
+ *******************************************************/
+CFrameKernel::~CFrameKernel()
+{
+    if (m_pLock)
+    {
+        delete m_pLock;
+        m_pLock = 0;
+    }
+}
+
+/*******************************************************
+  函 数 名: CFrameKernel::Enter
   描    述: 实现进入对象基类的全局临界区
   输    入: 
   输    出: 
   返    回: 
   修改记录: 
  *******************************************************/
-void objBase::Enter()
+void CFrameKernel::Enter()
 {
-    if (CFrameKernel::sm_pLock)
+    if (m_pLock)
     {
-        CFrameKernel::sm_pLock->Enter();
+        m_pLock->Enter();
     }
 }
 
 /*******************************************************
-  函 数 名: objBase::Leave
+  函 数 名: CFrameKernel::Leave
   描    述: 实现退出对象基类的全局临界区
   输    入: 
   输    出: 
   返    回: 
   修改记录: 
  *******************************************************/
-void objBase::Leave()
+void CFrameKernel::Leave()
 {
-    if (CFrameKernel::sm_pLock)
+    if (m_pLock)
     {
-        CFrameKernel::sm_pLock->Leave();
+        m_pLock->Leave();
     }
 }
 
 /*******************************************************
-  函 数 名: objBase::Start
+  函 数 名: CFrameKernel::Start
   描    述: 整个应用实例的入口
-  输    入: xmlFile - 输入的xml配置文件
+  输    入: cfgDeploy   - 输入的部署配置文件
   输    出: 
   返    回: 成功或者失败的错误码
   修改记录: 
  *******************************************************/
-objBase *objBase::Start(const char *xmlFile)
+objBase *CFrameKernel::Start(const char *cfgDeploy)
 {
     /////////////////////////////////////////////////
     /// 加载管理器内所有对象
     /////////////////////////////////////////////////
-    IManager *piManager = CFrameKernel::sm_instance.Load(xmlFile);
+    IManager *piManager = Load(cfgDeploy);
     if (!piManager)
     {
         return NULL;
@@ -142,14 +156,14 @@ objBase *objBase::Start(const char *xmlFile)
 }
 
 /*******************************************************
-  函 数 名: objBase::End
+  函 数 名: CFrameKernel::End
   描    述: 整个应用实例的出口
   输    入: 
   输    出: 
   返    回: 
   修改记录: 
  *******************************************************/
-void objBase::End(objBase *pBase)
+void CFrameKernel::End(objBase *pBase)
 {
     /////////////////////////////////////////////////
     /// 结束管理器内所有对象
@@ -163,33 +177,9 @@ void objBase::End(objBase *pBase)
 }
 
 /*******************************************************
-  函 数 名: CFrameKernel::CFrameKernel
-  描    述: CFrameKernel构造
-  输    入: 
-  输    出: 
-  返    回: 
-  修改记录: 
- *******************************************************/
-CFrameKernel::CFrameKernel()
-{
-}
-
-/*******************************************************
-  函 数 名: CFrameKernel::~CFrameKernel
-  描    述: CFrameKernel析构
-  输    入: 
-  输    出: 
-  返    回: 
-  修改记录: 
- *******************************************************/
-CFrameKernel::~CFrameKernel()
-{
-}
-
-/*******************************************************
   函 数 名: CFrameKernel::Load
   描    述: 加载配置文件中的所有对象
-  输    入: xmlFile - 输入的xml配置文件
+  输    入: xmlFile     - 输入的xml配置文件
   输    出: 
   返    回: 
   修改记录: 

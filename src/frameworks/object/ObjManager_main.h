@@ -18,7 +18,7 @@
 /// 挂接实现类到IObject模板 - 配置系统ID
 /// -------------------------------------------------
 #define IMPLEMENT_CONFIG_SYSTEM(id, info)           \
-    DCOP_IMPLEMENT_CONFIG_INTEGER(id, m_dwSystemID)      \
+    DCOP_IMPLEMENT_CONFIG_INTEGER(id, m_dwSystemID) \
     DCOP_IMPLEMENT_CONFIG_STRING(info, m_szSystemInfo)
 
 

@@ -88,6 +88,8 @@ IFactory *IFactory::GetInstance()
  *******************************************************/
 CClassFactory::CClassFactory()
 {
+    m_pLock = DCOP_CreateLock();
+
     DCOP_CONSTRUCT_INSTANCE(NULL);
 }
 
@@ -101,11 +103,16 @@ CClassFactory::CClassFactory()
  *******************************************************/
 CClassFactory::~CClassFactory()
 {
-    objBase::Enter();
+    {
+        AutoObjLock(this);
+        m_instances.clear();
+    }
 
-    m_instances.clear();
-
-    objBase::Leave();
+    if (m_pLock)
+    {
+        delete m_pLock;
+        m_pLock = 0;
+    }
 
     DCOP_DESTRUCT_INSTANCE();
 }
@@ -130,21 +137,18 @@ DWORD CClassFactory::InsertClass(const char *cszName,
         return FAILURE;
     }
 
-    objBase::Enter();
+    AutoObjLock(this);
 
     std::string strKey = cszName;
     IT_INSTANCES it_ins = m_instances.find(cszName);
     if (it_ins != m_instances.end())
     {
-        objBase::Leave();
         return FAILURE;
     }
 
     (void)m_instances.insert(
                 MAP_INSTANCES::value_type(
                 strKey, fnConstruct));
-
-    objBase::Leave();
 
     return SUCCESS;
 }
@@ -159,7 +163,7 @@ DWORD CClassFactory::InsertClass(const char *cszName,
             argv                - 类的构建参数列表
   输    出: 
   返    回: 
-            Instance *             - 创建的实例
+            Instance *          - 创建的实例
   修改记录: 
  *******************************************************/
 Instance *CClassFactory::CreateInstance(const char *cszName, 
@@ -172,21 +176,50 @@ Instance *CClassFactory::CreateInstance(const char *cszName,
         return 0;
     }
 
-    objBase::Enter();
+    AutoObjLock(this);
 
     std::string strKey = cszName;
     IT_INSTANCES it_ins = m_instances.find(cszName);
     if (it_ins == m_instances.end())
     {
-        objBase::Leave();
         return 0;
     }
 
     Instance *pBaseRc = ((*it_ins).second)(piParent, argc, argv);
 
-    objBase::Leave();
-
     return pBaseRc;
+}
+
+/*******************************************************
+  函 数 名: CClassFactory::Enter
+  描    述: 进入类工厂临界区
+  输    入: 
+  输    出: 
+  返    回: 
+  修改记录: 
+ *******************************************************/
+void CClassFactory::Enter()
+{
+    if (m_pLock)
+    {
+        m_pLock->Enter();
+    }
+}
+
+/*******************************************************
+  函 数 名: CClassFactory::Leave
+  描    述: 退出类工厂临界区
+  输    入: 
+  输    出: 
+  返    回: 
+  修改记录: 
+ *******************************************************/
+void CClassFactory::Leave()
+{
+    if (m_pLock)
+    {
+        m_pLock->Leave();
+    }
 }
 
 /*******************************************************
@@ -201,7 +234,7 @@ void CClassFactory::Dump(LOG_PRINT logPrint, LOG_PARA logPara, int argc, void **
 {
     if (!logPrint) return;
 
-    objBase::Enter();
+    AutoObjLock(this);
     logPrint("-----------------------------------------------\r\n", logPara);
     logPrint("Factory Dump: \r\n", logPara);
 
@@ -218,6 +251,5 @@ void CClassFactory::Dump(LOG_PRINT logPrint, LOG_PARA logPara, int argc, void **
 
     logPrint(STR_FORMAT("Classes Count: %d\r\n", m_instances.size()), logPara);
     logPrint("-----------------------------------------------\r\n", logPara);
-    objBase::Leave();
 }
 

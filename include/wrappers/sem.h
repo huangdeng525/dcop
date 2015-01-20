@@ -30,7 +30,9 @@ public:
 };
 
 /// ×Ô¶¯Ëø
-#define AutoLock(x) AutoLockEx __tmp_##x(x)
+#define AutoLock(x) AutoLockLine(x, __LINE__)
+#define AutoLockLine(x, line) AutoLockLineEx(x, line)
+#define AutoLockLineEx(x, line) AutoLockEx __tmp_##line(x)
 class AutoLockEx
 {
 public:

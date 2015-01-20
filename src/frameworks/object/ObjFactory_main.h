@@ -12,6 +12,7 @@
 #define INC_MAP
 
 #include "Factory_if.h"
+#include "sem.h"
 
 
 class CClassFactory : public IFactory
@@ -35,6 +36,9 @@ public:
                         int argc,
                         char **argv);
 
+    void Enter();
+    void Leave();
+
     void Dump(LOG_PRINT logPrint, 
                         LOG_PARA logPara, 
                         int argc, 
@@ -42,6 +46,7 @@ public:
 
 private:
     MAP_INSTANCES m_instances;
+    objLock *m_pLock;
 };
 
 
