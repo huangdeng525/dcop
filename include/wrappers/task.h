@@ -12,8 +12,8 @@
 
 
 /// 创建任务的宏
-#define DCOP_CreateTask(szName, pEntry, dwStackSize, dwPriority, pPara) \
-    objTask::CreateInstance(szName, pEntry, dwStackSize, dwPriority, pPara, __FILE__, __LINE__)
+#define DCOP_CreateTask(cszName, pEntry, dwStackSize, dwPriority, pPara) \
+    objTask::CreateInstance(cszName, pEntry, dwStackSize, dwPriority, pPara, __FILE__, __LINE__)
 
 
 /// 任务对象(任务从入口退出时会析构本任务对象)
@@ -38,7 +38,7 @@ public:
     };
 
 public:
-    static objTask *CreateInstance(const char *szName,
+    static objTask *CreateInstance(const char *cszName,
                         OSTASK_ENTRY pEntry,
                         DWORD dwStackSize,
                         DWORD dwPriority,
@@ -47,8 +47,11 @@ public:
                         int line);
     virtual ~objTask() = 0;
 
+    virtual const char *GetName() = 0;
+    virtual DWORD GetID() = 0;
+
     static void Delay(DWORD delayMilliseconds);
-    static DWORD Current();
+    static objTask *Current();
 };
 
 

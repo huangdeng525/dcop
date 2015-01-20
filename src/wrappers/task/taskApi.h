@@ -22,7 +22,7 @@ extern "C" {
 
 typedef DWORD (*CREATE_TASK_FUNC)(
                     OSHANDLE *pHandle,
-                    const char *szName,
+                    const char *cszName,
                     DWORD *pdwID,
                     void (*pEntry)(void *pPara),
                     DWORD dwStackSize,
@@ -30,7 +30,7 @@ typedef DWORD (*CREATE_TASK_FUNC)(
                     void *pPara);
 typedef DWORD (*DESTROY_TASK_FUNC)(
                     OSHANDLE Handle,
-                    const char *szName,
+                    const char *cszName,
                     DWORD dwID);
 typedef void (*DELAY_TASK_FUNC)(
                     DWORD dwMilliseconds);

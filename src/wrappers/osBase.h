@@ -94,10 +94,12 @@ public:
     void *objGetPtr() {return m_objPtr;}
 
     const char *cszGetName() {return m_szName;}
+    void vSetName(const char *cszName);
+
     DWORD dwGetID() {return m_dwID;}
     void vSetID(DWORD dwID) {m_dwID = dwID;}
 
-    void vAddToList(DWORD osType, void *objPtr, const char *cszName, DWORD dwID);
+    void vAddToList(DWORD osType, void *objPtr);
     void vDelFromList();
 
     static osBase *First(DWORD osType);
