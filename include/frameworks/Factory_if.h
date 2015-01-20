@@ -48,14 +48,6 @@ interface IFactory : public Instance
                         int argc = 0,
                         char **argv = 0
                         ) = 0;
-
-    /// DumpÈë¿Ú
-    virtual void Dump(
-                        LOG_PRINT logPrint,
-                        LOG_PARA logPara,
-                        int argc,
-                        void **argv
-                        ) = 0;
 };
 
 

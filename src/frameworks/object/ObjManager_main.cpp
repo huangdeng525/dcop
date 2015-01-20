@@ -33,7 +33,7 @@ DCOP_IMPLEMENT_INSTANCE_END
 /// 实现对象类
 /// -------------------------------------------------
 DCOP_IMPLEMENT_IOBJECT(CObjectManager)
-    DCOP_IMPLEMENT_IDENTIFY_STATIC("Manager", DCOP_OBJECT_MANAGER)
+    DCOP_IMPLEMENT_IDENTIFY_STATIC("manager", DCOP_OBJECT_MANAGER)
     DCOP_IMPLEMENT_CONFIG_THREADSAFE("threadsafe")
     IMPLEMENT_CONFIG_SYSTEM("id", "info")
 DCOP_IMPLEMENT_IOBJECT_END
@@ -233,13 +233,38 @@ void CObjectManager::Dump(LOG_PRINT logPrint, LOG_PARA logPara, int argc, void *
     AutoObjLock(this);
 
     DWORD dwCount = (DWORD)m_objects.size();
-    CTableString tableStr(6, dwCount + 1, "  ");
+    CTableString tableStr(7, dwCount + 4, "  ");
     tableStr << "objKey";
     tableStr << "objID";
     tableStr << "objName";
     tableStr << "className";
     tableStr << "classSize";
     tableStr << "refCount";
+    tableStr << "objPtr";
+
+    tableStr << STR_FORMAT("%d", DCOP_OBJECT_KERNEL);
+    tableStr << STR_FORMAT("%d", DCOP_OBJECT_KERNEL);
+    tableStr << "kernel";
+    tableStr << "";
+    tableStr << "";
+    tableStr << "";
+    tableStr << STR_FORMAT("%p", objBase::GetInstance());
+
+    tableStr << STR_FORMAT("%d", DCOP_OBJECT_FACTORY);
+    tableStr << STR_FORMAT("%d", DCOP_OBJECT_FACTORY);
+    tableStr << "factory";
+    tableStr << "";
+    tableStr << "";
+    tableStr << "";
+    tableStr << STR_FORMAT("%p", IFactory::GetInstance());
+
+    tableStr << STR_FORMAT("%d", DCOP_OBJECT_MANAGER);
+    tableStr << STR_FORMAT("%d", ID());
+    tableStr << Name();
+    tableStr << Class();
+    tableStr << STR_FORMAT("%d", Size());
+    tableStr << STR_FORMAT("%d", GetRef());
+    tableStr << STR_FORMAT("%p", this);
 
     DCOP_START_TIME();
 
@@ -255,6 +280,7 @@ void CObjectManager::Dump(LOG_PRINT logPrint, LOG_PARA logPara, int argc, void *
         tableStr << pObjTmp->Class();
         tableStr << STR_FORMAT("%d", pObjTmp->Size());
         tableStr << STR_FORMAT("%d", pObjTmp->GetRef());
+        tableStr << STR_FORMAT("%p", pObjTmp);
     }
 
     DCOP_END_TIME();

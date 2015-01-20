@@ -107,12 +107,6 @@ interface IObject : public Instance
     virtual bool bThreadSafe() = 0;
     virtual bool bConcurrent() = 0;
 
-    /// 进入和离开的互斥保护
-    ///     互斥保护: 由对象实现者自己来对入口进行保护
-    ///     使用方法: 可在入口函数开始使用AutoObjLock(this)来简化操作
-    virtual void Enter() = 0;
-    virtual void Leave() = 0;
-
     /// 获取父对象和子对象
     ///     父对象: 来源于Instance构造的父对象，只是在IObject构建时重新转换了类型
     ///     子对象: 可由具体对象自己创建管理器来进行子对象的管理并提供查询方法
@@ -130,26 +124,6 @@ interface IObject : public Instance
     /// 消息入口
     ///     消息释放: 对于输入消息，只处理，不释放
     virtual void Proc(objMsg *msg) {}
-
-    /// Dump入口
-    ///     变参使用: 实现时请按约定的顺序获取各个指针参数并输出
-    virtual void Dump(LOG_PRINT logPrint, LOG_PARA logPara, int argc, void **argv) {}
-};
-
-
-/// -------------------------------------------------
-/// 自动对象锁，用于对象入口函数自动加锁和解锁
-/// -------------------------------------------------
-#define AutoObjLock(x) AutoObjLockEx __tmp_##x(x)
-class AutoObjLockEx
-{
-public:
-    AutoObjLockEx() {m_piObj = 0;}
-    AutoObjLockEx(IObject *piObj) {m_piObj = piObj; if (m_piObj) m_piObj->Enter();}
-    ~AutoObjLockEx() {if (m_piObj) m_piObj->Leave();}
-
-private:
-    IObject *m_piObj;
 };
 
 

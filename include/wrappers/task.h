@@ -84,7 +84,9 @@ private:
 
 
 /// ×Ô¶¯×ÔÐýËø
-#define AutoSpinLock(x) AutoSpinLockEx __tmp_##x(x)
+#define AutoSpinLock(x) AutoSpinLockLine(x, __LINE__)
+#define AutoSpinLockLine(x, line) AutoSpinLockLineEx(x, __LINE__)
+#define AutoSpinLockLineEx(x, line) AutoSpinLockEx __tmp_##line(x)
 class AutoSpinLockEx
 {
 public:
