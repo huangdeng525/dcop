@@ -76,9 +76,6 @@ void CMemTrack::Init()
         sg_pMemLog = CLog::Init(LOG_ID_MEMLOG, "mem.log");
     }
 
-    /// test ... 
-    ShowCallStack(0, 0, 0);
-
     m_record_status = record_status_init;
 }
 
@@ -152,12 +149,14 @@ void CMemTrack::AddTrack(void *address, size_t size, const char *file, int line)
 
     if (sg_pMemLog && g_mem_track.GetRecordDetail(file))
     {
-        sg_pMemLog->Write(STR_FORMAT(" ADDRESS '%p' (len:%d) Alloc in %s:%d, curTask:%d. \r\n",
+        objTask *pTask = objTask::Current();
+        sg_pMemLog->Write(STR_FORMAT(" ADDRESS '%p' (len:%d) Alloc in %s:%d, curTask:'%s'(%d). \r\n",
                         address,
                         size,
                         file,
                         line,
-                        objTask::Current()));
+                        (pTask)? pTask->GetName() : "Null",
+                        (pTask)? pTask->GetID() : 0));
     }
 
     MEM_INFO info;
@@ -224,11 +223,13 @@ void CMemTrack::RemoveTrack(void *address, const char *file, int line)
 
     if (sg_pMemLog && g_mem_track.GetRecordDetail(file))
     {
-        sg_pMemLog->Write(STR_FORMAT(" ADDRESS '%p' Free in %s:%d, curTask:%d. \r\n",
+        objTask *pTask = objTask::Current();
+        sg_pMemLog->Write(STR_FORMAT(" ADDRESS '%p' Free in %s:%d, curTask:'%s'(%d). \r\n",
                         address,
                         file,
                         line,
-                        objTask::Current()));
+                        (pTask)? pTask->GetName() : "Null",
+                        (pTask)? pTask->GetID() : 0));
     }
 
     /// ´ÓÉêÇëÈİÆ÷ÖĞ²éÕÒ¼ÇÂ¼
@@ -313,7 +314,9 @@ void CMemTrack::SetRecordDetail(bool enable, bool only_cur_task, const char *onl
 
     if (only_cur_task)
     {
-        m_cur_task_id = objTask::Current();
+        objTask *pTask = objTask::Current();
+        if (pTask) m_cur_task_id = pTask->GetID();
+        else m_cur_task_id = 0;
     }
     else
     {
@@ -346,7 +349,8 @@ bool CMemTrack::GetRecordDetail(const char *file)
         return false;
     }
 
-    if (m_cur_task_id && (objTask::Current() != m_cur_task_id))
+    objTask *pTask = objTask::Current();
+    if (m_cur_task_id && pTask && (pTask->GetID() != m_cur_task_id))
     {
         return false;
     }

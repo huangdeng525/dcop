@@ -25,23 +25,24 @@ public:
 
     DWORD Destroy();
 
-public:
-    OSTASK_ENTRY pGetEntry() const {return m_pEntry;}
-    DWORD dwGetStackSize() const {return m_dwStackSize;}
-    IPara *pGetPara() const {return m_pPara;}
-    DWORD dwGetPriority() const {return m_dwPriority;}
+    const char *GetName() {return osBase::cszGetName();}
+    DWORD GetID() {return osBase::dwGetID();}
 
-    void vSetName(const char *szName);
-    const char *szGetName();
+    void SetName(const char *cszName) {osBase::vSetName(cszName);}
+    void SetID(DWORD dwID) {osBase::vSetID(dwID);}
+
+    static DWORD Current();
 
 private:
-    static void     vAllTaskEntry(void *pPara);
+    static void vAllTaskEntry(void *pPara);
+    OSTASK_ENTRY pGetEntry() const {return m_pEntry;}
+    IPara *pGetPara() const {return m_pPara;}
+
+private:
     OSTASK_ENTRY    m_pEntry;
     DWORD           m_dwStackSize;
     DWORD           m_dwPriority;
     IPara *         m_pPara;
-    DWORD           m_dwID;
-    char            m_szName[OSNAME_LENGTH];
 };
 
 

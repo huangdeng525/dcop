@@ -40,7 +40,18 @@ osBase::~osBase()
     vDelFromList();
 }
 
-void osBase::vAddToList(DWORD osType, void *objPtr, const char *cszName, DWORD dwID)
+void osBase::vSetName(const char *cszName)
+{
+    if (!cszName || !(*cszName))
+    {
+        return;
+    }
+
+    (void)snprintf(m_szName, sizeof(m_szName), "%s", cszName);
+    m_szName[sizeof(m_szName) - 1] = '\0';
+}
+
+void osBase::vAddToList(DWORD osType, void *objPtr)
 {
     if (osType >= OSTYPE_NUM)
     {
@@ -49,9 +60,6 @@ void osBase::vAddToList(DWORD osType, void *objPtr, const char *cszName, DWORD d
 
     m_osType = osType;
     m_objPtr = objPtr;
-    (void)snprintf(m_szName, sizeof(m_szName), "%s", cszName);
-    m_szName[sizeof(m_szName) - 1] = '\0';
-    m_dwID = dwID;
 
     AutoSpinLock(g_pOsBaseLock);
     LIST_INSERT_HEAD(&g_osBaseHead[osType], this, m_field);
@@ -136,6 +144,13 @@ void osBase::Dump(LOG_PRINT logPrint, LOG_PARA logPara, int argc, void **argv)
     {
         return;
     }
+
+    objTask *pTask = objTask::Current();
+    PrintLog(STR_FORMAT("Current Task: '%s'(%d)", 
+                        (pTask)? pTask->GetName() : "Null", 
+                        (pTask)? pTask->GetID() : 0), 
+                        PrintToConsole, 0);
+    ShowCallStack(0, 0, 0);
 
     AutoSpinLock(g_pOsBaseLock);
 

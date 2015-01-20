@@ -10,7 +10,15 @@
 #include <string.h>
 
 
-objTask *objTask::CreateInstance(const char *szName,
+/*******************************************************
+  函 数 名: objTask::CreateInstance
+  描    述: 创建任务
+  输    入: 
+  输    出: 
+  返    回: 
+  修改记录: 
+ *******************************************************/
+objTask *objTask::CreateInstance(const char *cszName,
                         OSTASK_ENTRY pEntry,
                         DWORD dwStackSize,
                         DWORD dwPriority,
@@ -21,49 +29,112 @@ objTask *objTask::CreateInstance(const char *szName,
     #undef new
     CTaskBase *pTaskBase = new (file, line) CTaskBase();
     #define new new(__FILE__, __LINE__)
-    if (pTaskBase)
+    if (!pTaskBase)
     {
-        pTaskBase->vSetName(szName);
+        return NULL;
+    }
+
+    pTaskBase->SetName(cszName);
+
+    if (pEntry)
+    {
         if (pTaskBase->Create(pEntry, dwStackSize, dwPriority, pPara))
         {
             delete pTaskBase;
-            pTaskBase = 0;
+            pTaskBase = NULL;
         }
+    }
+    else
+    {
+        /// 没有入口就添加当前任务
+        pTaskBase->SetID(CTaskBase::Current());
     }
 
     return pTaskBase;
 }
 
+/*******************************************************
+  函 数 名: objTask::~objTask
+  描    述: 析构任务
+  输    入: 
+  输    出: 
+  返    回: 
+  修改记录: 
+ *******************************************************/
 objTask::~objTask()
 {
 }
 
+/*******************************************************
+  函 数 名: objTask::Delay
+  描    述: 任务延时
+  输    入: 
+  输    出: 
+  返    回: 
+  修改记录: 
+ *******************************************************/
 void objTask::Delay(DWORD delayMilliseconds)
 {
     OS_VDFUNC_CALL(Task, Delay)(delayMilliseconds);
 }
 
-DWORD objTask::Current()
+/*******************************************************
+  函 数 名: objTask::Current
+  描    述: 获取当前任务
+  输    入: 
+  输    出: 
+  返    回: 
+  修改记录: 
+ *******************************************************/
+objTask *objTask::Current()
 {
-    DWORD dwCurID = OS_FUNC_CALL(Task, Current)();
-    if (dwCurID == FAILURE) dwCurID = 0;
-    return dwCurID;
+    osBase *pBase = osBase::Find(OSTYPE_TASK, CTaskBase::Current());
+    if (!pBase)
+    {
+        return NULL;
+    }
+
+    return (objTask *)pBase->objGetPtr();
 }
 
+/*******************************************************
+  函 数 名: objTask::IPara::~IPara
+  描    述: 析构任务参数
+  输    入: 
+  输    出: 
+  返    回: 
+  修改记录: 
+ *******************************************************/
 objTask::IPara::~IPara()
 {
 }
 
+/*******************************************************
+  函 数 名: CTaskBase::CTaskBase
+  描    述: CTaskBase构造
+  输    入: 
+  输    出: 
+  返    回: 
+  修改记录: 
+ *******************************************************/
 CTaskBase::CTaskBase()
 {
     m_pEntry = 0;
     m_dwStackSize = 0;
     m_dwPriority = 0;
     m_pPara = 0;
-    m_dwID = 0;
-    *m_szName = 0;
+
+    osBase::vAddToList(OSTYPE_TASK, this);
 }
 
+/*******************************************************
+  函 数 名: CTaskBase::~CTaskBase
+  描    述: CTaskBase析构
+  输    入: 
+  输    出: 
+  返    回: 
+  修改记录: 
+ *******************************************************/
 CTaskBase::~CTaskBase()
 {
     (void)Destroy();
@@ -75,22 +146,14 @@ CTaskBase::~CTaskBase()
     }
 }
 
-void CTaskBase::vSetName(const char *szName)
-{
-    if (!szName || !(*szName))
-    {
-        return;
-    }
-
-    (void)snprintf(m_szName, sizeof(m_szName), "%s", szName);
-    m_szName[sizeof(m_szName) - 1] = '\0';
-}
-
-const char *CTaskBase::szGetName()
-{
-    return m_szName;
-}
-
+/*******************************************************
+  函 数 名: CTaskBase::vAllTaskEntry
+  描    述: 所有任务入口
+  输    入: 
+  输    出: 
+  返    回: 
+  修改记录: 
+ *******************************************************/
 void CTaskBase::vAllTaskEntry(void *pPara)
 {
     CTaskBase *pThis = (CTaskBase *)pPara;
@@ -99,7 +162,8 @@ void CTaskBase::vAllTaskEntry(void *pPara)
         return;
     }
 
-    pThis->osBase::vSetID(objTask::Current());
+    /// 在入口处获得当前任务ID
+    pThis->SetID(CTaskBase::Current());
 
     /// 调用真正的任务入口
     (pThis->pGetEntry())(pThis->pGetPara());
@@ -108,28 +172,41 @@ void CTaskBase::vAllTaskEntry(void *pPara)
     delete pThis;
 }
 
+/*******************************************************
+  函 数 名: CTaskBase::Create
+  描    述: 创建任务
+  输    入: 
+  输    出: 
+  返    回: 
+  修改记录: 
+ *******************************************************/
 DWORD CTaskBase::Create(OSTASK_ENTRY pEntry,
-            DWORD dwStackSize,
-            DWORD dwPriority,
-            IPara *pPara)
+                        DWORD dwStackSize,
+                        DWORD dwPriority,
+                        IPara *pPara)
 {
     m_pEntry = pEntry;
     m_dwStackSize = dwStackSize;
     m_dwPriority = dwPriority;
     m_pPara = pPara;
     OSHANDLE Handle = 0;
+    DWORD dwID = 0;
 
-    DWORD dwRc = OS_FUNC_CALL(Task, Create)(&Handle, 
-                    m_szName,
-                    &m_dwID,
-                    vAllTaskEntry, 
-                    m_dwStackSize,
-                    m_dwPriority,
-                    this);
+    if (!pEntry)
+    {
+        return FAILURE;
+    }
+
+    DWORD dwRc = OS_FUNC_CALL(Task, Create)(&Handle,
+                        osBase::cszGetName(),
+                        &dwID,
+                        vAllTaskEntry,
+                        m_dwStackSize,
+                        m_dwPriority,
+                        this);
     if (SUCCESS == dwRc)
     {
         osBase::vSetHandle(Handle);
-        osBase::vAddToList(OSTYPE_TASK, this, m_szName, m_dwID);
     }
     else
     {
@@ -137,23 +214,49 @@ DWORD CTaskBase::Create(OSTASK_ENTRY pEntry,
         m_pPara = 0;
     }
 
-    TRACE_LOG(STR_FORMAT("Task '%s' Create rc:0x%x", m_szName, dwRc));
+    TRACE_LOG(STR_FORMAT("Task '%s' Create rc:0x%x", osBase::cszGetName(), dwRc));
 
     return dwRc;
 }
 
+/*******************************************************
+  函 数 名: CTaskBase::Destroy
+  描    述: 删除任务
+  输    入: 
+  输    出: 
+  返    回: 
+  修改记录: 
+ *******************************************************/
 DWORD CTaskBase::Destroy()
 {
-    DWORD dwRc = OS_FUNC_CALL(Task, Destroy)(osBase::hGetHandle(),
-                    m_szName,
-                    m_dwID);
-    if (SUCCESS == dwRc)
+    if (!osBase::hGetHandle())
     {
-        osBase::vSetHandle(0);
+        return SUCCESS;
     }
 
-    TRACE_LOG(STR_FORMAT("Task '%s' Destroy rc:0x%x", m_szName, dwRc));
+    DWORD dwRc = OS_FUNC_CALL(Task, Destroy)(osBase::hGetHandle(),
+                    osBase::cszGetName(),
+                    osBase::dwGetID());
+
+    osBase::vSetHandle(0);
+
+    TRACE_LOG(STR_FORMAT("Task '%s' Destroy rc:0x%x", osBase::cszGetName(), dwRc));
 
     return dwRc;
+}
+
+/*******************************************************
+  函 数 名: CTaskBase::Current
+  描    述: 获取当前任务ID
+  输    入: 
+  输    出: 
+  返    回: 
+  修改记录: 
+ *******************************************************/
+DWORD CTaskBase::Current()
+{
+    DWORD dwCurID = OS_FUNC_CALL(Task, Current)();
+    if (dwCurID == FAILURE) dwCurID = 0;
+    return dwCurID;
 }
 

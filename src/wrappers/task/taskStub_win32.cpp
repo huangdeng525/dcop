@@ -27,7 +27,7 @@ static int aiTaskPrio[] =
 };
 
 DWORD STUB_TaskCreate(OSHANDLE *pHandle,
-            const char *szName,
+            const char *cszName,
             DWORD *pdwID,
             void (*pEntry)(void *pPara),
             DWORD dwStackSize,
@@ -88,7 +88,7 @@ ERROR_LABEL:
 }
 
 DWORD STUB_TaskDestroy(OSHANDLE Handle, 
-        const char *szName,
+        const char *cszName,
         DWORD dwID)
 {
     if (GetCurrentThreadId() == dwID)

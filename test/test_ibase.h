@@ -5,8 +5,8 @@
 /// All rights reserved.
 /// -------------------------------------------------
 
-#ifndef _TEST_INSTANCE_H_
-#define _TEST_INSTANCE_H_
+#ifndef _TEST_IBASE_H_
+#define _TEST_IBASE_H_
 
 #include "test.h"
 #include "BaseClass.h"
@@ -63,5 +63,5 @@ private:
 };
 
 
-#endif // #ifndef _TEST_INSTANCE_H_
+#endif // #ifndef _TEST_IBASE_H_
 
