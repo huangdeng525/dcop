@@ -281,6 +281,8 @@ void ShowCallStack(LOG_PRINT print, LOG_PARA para, int depth)
         para = 0;
     }
 
+#undef free
+
     layer = backtrace(stack_addr, ARRAY_SIZE(stack_addr));
     ppstack_funcs = backtrace_symbols(stack_addr, layer);
     if (!ppstack_funcs)
@@ -302,6 +304,8 @@ void ShowCallStack(LOG_PRINT print, LOG_PARA para, int depth)
     }
 
     free(ppstack_funcs);
+
+#define free(ptr) DCOP_FreeEx(ptr, __FILE__, __LINE__)
 }
 
 

@@ -12,7 +12,6 @@
 #include "BaseMessage.h"
 #include "BaseID.h"
 #include "string/tablestring.h"
-#include "../../wrappers/osBase.h"
 
 
 /// -------------------------------------------------
@@ -288,8 +287,6 @@ void CObjectManager::Dump(LOG_PRINT logPrint, LOG_PARA logPara, int argc, void *
     logPrint(STR_FORMAT("Manager Dump: (Objects Count: %d) \r\n", dwCount), logPara);
     tableStr.Show(logPrint, logPara, "=", "-");
     logPrint(STR_FORMAT("[cost time: %d ms] \r\n", DCOP_COST_TIME()), logPara);
-
-    osBase::Dump(logPrint, logPara, argc, argv);
 }
 
 /*******************************************************

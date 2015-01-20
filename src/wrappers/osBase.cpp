@@ -10,6 +10,9 @@
 #include "string/tablestring.h"
 
 
+/// -------------------------------------------------
+/// OS基础元素集合
+/// -------------------------------------------------
 static LIST_HEAD(osBase) g_osBaseHead[OSTYPE_NUM] =
 {
     {0, 0},
@@ -22,9 +25,22 @@ static LIST_HEAD(osBase) g_osBaseHead[OSTYPE_NUM] =
     {0, 0},
     {0, 0}
 };
+
+/// -------------------------------------------------
+/// OS基础元素集合操作自旋锁
+/// -------------------------------------------------
 objSpinLock g_osBaseLock;
 objSpinLock *g_pOsBaseLock = &g_osBaseLock;
 
+
+/*******************************************************
+  函 数 名: osBase::osBase
+  描    述: osBase构造
+  输    入: 
+  输    出: 
+  返    回: 
+  修改记录: 
+ *******************************************************/
 osBase::osBase()
 {
     m_hHandle = 0;
@@ -35,11 +51,27 @@ osBase::osBase()
     LIST_NODE_INIT(this, m_field);
 }
 
+/*******************************************************
+  函 数 名: osBase::~osBase
+  描    述: osBase析构
+  输    入: 
+  输    出: 
+  返    回: 
+  修改记录: 
+ *******************************************************/
 osBase::~osBase()
 {
     vDelFromList();
 }
 
+/*******************************************************
+  函 数 名: osBase::vSetName
+  描    述: 设置名字
+  输    入: 
+  输    出: 
+  返    回: 
+  修改记录: 
+ *******************************************************/
 void osBase::vSetName(const char *cszName)
 {
     if (!cszName || !(*cszName))
@@ -51,6 +83,14 @@ void osBase::vSetName(const char *cszName)
     m_szName[sizeof(m_szName) - 1] = '\0';
 }
 
+/*******************************************************
+  函 数 名: osBase::vAddToList
+  描    述: 添加到集合中
+  输    入: 
+  输    出: 
+  返    回: 
+  修改记录: 
+ *******************************************************/
 void osBase::vAddToList(DWORD osType, void *objPtr)
 {
     if (osType >= OSTYPE_NUM)
@@ -65,6 +105,14 @@ void osBase::vAddToList(DWORD osType, void *objPtr)
     LIST_INSERT_HEAD(&g_osBaseHead[osType], this, m_field);
 }
 
+/*******************************************************
+  函 数 名: osBase::vAddToList
+  描    述: 从集合中删除
+  输    入: 
+  输    出: 
+  返    回: 
+  修改记录: 
+ *******************************************************/
 void osBase::vDelFromList()
 {
     if (m_osType >= OSTYPE_NUM)
@@ -76,6 +124,14 @@ void osBase::vDelFromList()
     LIST_REMOVE(&g_osBaseHead[m_osType], this, m_field);
 }
 
+/*******************************************************
+  函 数 名: osBase::First
+  描    述: 开始元素
+  输    入: 
+  输    出: 
+  返    回: 
+  修改记录: 
+ *******************************************************/
 osBase *osBase::First(DWORD osType)
 {
     if (osType >= OSTYPE_NUM)
@@ -87,12 +143,28 @@ osBase *osBase::First(DWORD osType)
     return LIST_FIRST(&g_osBaseHead[osType]);
 }
 
+/*******************************************************
+  函 数 名: osBase::Next
+  描    述: 下一个元素
+  输    入: 
+  输    出: 
+  返    回: 
+  修改记录: 
+ *******************************************************/
 osBase *osBase::Next()
 {
     AutoSpinLock(g_pOsBaseLock);
     return LIST_NEXT(this, m_field);
 }
 
+/*******************************************************
+  函 数 名: osBase::Find
+  描    述: 通过名字查找元素
+  输    入: 
+  输    出: 
+  返    回: 
+  修改记录: 
+ *******************************************************/
 osBase *osBase::Find(DWORD osType, const char *cszName)
 {
     if (osType >= OSTYPE_NUM)
@@ -115,6 +187,14 @@ osBase *osBase::Find(DWORD osType, const char *cszName)
     return pBase;
 }
 
+/*******************************************************
+  函 数 名: osBase::Find
+  描    述: 通过ID查找元素
+  输    入: 
+  输    出: 
+  返    回: 
+  修改记录: 
+ *******************************************************/
 osBase *osBase::Find(DWORD osType, DWORD dwID)
 {
     if (osType >= OSTYPE_NUM)
@@ -137,6 +217,14 @@ osBase *osBase::Find(DWORD osType, DWORD dwID)
     return pBase;
 }
 
+/*******************************************************
+  函 数 名: osBase::Dump
+  描    述: Dump
+  输    入: 
+  输    出: 
+  返    回: 
+  修改记录: 
+ *******************************************************/
 void osBase::Dump(LOG_PRINT logPrint, LOG_PARA logPara, int argc, void **argv)
 {
     DWORD osType = (argc)? *(DWORD *)(argv[0]) : OSTYPE_TASK;
