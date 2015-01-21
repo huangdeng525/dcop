@@ -185,17 +185,17 @@ DWORD CTaskBase::Create(OSTASK_ENTRY pEntry,
                         DWORD dwPriority,
                         IPara *pPara)
 {
+    if (!pEntry)
+    {
+        return FAILURE;
+    }
+
     m_pEntry = pEntry;
     m_dwStackSize = dwStackSize;
     m_dwPriority = dwPriority;
     m_pPara = pPara;
     OSHANDLE Handle = 0;
     DWORD dwID = 0;
-
-    if (!pEntry)
-    {
-        return FAILURE;
-    }
 
     DWORD dwRc = OS_FUNC_CALL(Task, Create)(&Handle,
                         osBase::cszGetName(),
