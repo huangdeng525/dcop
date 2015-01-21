@@ -82,7 +82,8 @@ DWORD CTestSuiteRandom::Append(void *pBuf)
         return FAILURE;
     }
 
-    (void)m_aRandomList.Append(pBuf);
-    return SUCCESS;
+    int rc = 0;
+    TEST_CHECK(SUCCESS, m_aRandomList.Append(pBuf), rc);
+    return (rc)? FAILURE : SUCCESS;
 }
 
