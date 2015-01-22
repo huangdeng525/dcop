@@ -227,11 +227,7 @@ osBase *osBase::Find(DWORD osType, DWORD dwID)
  *******************************************************/
 void osBase::Dump(LOG_PRINT logPrint, LOG_PARA logPara, int argc, void **argv)
 {
-    DWORD osType = (argc)? *(DWORD *)(argv[0]) : OSTYPE_TASK;
-    if (osType >= OSTYPE_NUM)
-    {
-        return;
-    }
+    DWORD osType = (argc)? *(DWORD *)(argv[0]) : OSTYPE_NULL;
 
     objTask *pTask = objTask::Current();
     PrintLog(STR_FORMAT("Current Task: '%s'(%d)", 
@@ -242,32 +238,45 @@ void osBase::Dump(LOG_PRINT logPrint, LOG_PARA logPara, int argc, void **argv)
 
     AutoSpinLock(g_pOsBaseLock);
 
-    DWORD dwCount = (DWORD)LIST_COUNT(&g_osBaseHead[osType]);
-    CTableString tableStr(5, dwCount + 1, "  ");
-    tableStr << "Type";
-    tableStr << "Name";
-    tableStr << "ID";
-    tableStr << "Handle";
-    tableStr << "Ptr";
-
-    DCOP_START_TIME();
-
-    osBase *pBase = LIST_FIRST(&g_osBaseHead[osType]);
-    while (pBase)
+    for (DWORD i = 0; i < OSTYPE_NUM; ++i)
     {
-        DWORD dwType = pBase->osGetType();
-        tableStr << ((dwType >= OSTYPE_NUM)? "OSTYPE_NULL" : OSTYPE_INFO[dwType]);
-        tableStr << pBase->cszGetName();
-        tableStr << STR_FORMAT("%d", pBase->dwGetID());
-        tableStr << STR_FORMAT("%p", pBase->hGetHandle());
-        tableStr << STR_FORMAT("%p", pBase->objGetPtr());
-        pBase = LIST_NEXT(pBase, m_field);
+        if ((osType < OSTYPE_NUM) && (osType != i))
+        {
+            continue;
+        }
+
+        osBase *pBase = LIST_FIRST(&g_osBaseHead[i]);
+        if (!pBase)
+        {
+            continue;
+        }
+
+        DWORD dwCount = (DWORD)LIST_COUNT(&g_osBaseHead[i]);
+        CTableString tableStr(5, dwCount + 1, "  ");
+        tableStr << "Type";
+        tableStr << "Name";
+        tableStr << "ID";
+        tableStr << "Handle";
+        tableStr << "Ptr";
+
+        DCOP_START_TIME();
+
+        while (pBase)
+        {
+            DWORD dwType = pBase->osGetType();
+            tableStr << ((dwType >= OSTYPE_NUM)? "OSTYPE_NULL" : OSTYPE_INFO[dwType]);
+            tableStr << pBase->cszGetName();
+            tableStr << STR_FORMAT("%d", pBase->dwGetID());
+            tableStr << STR_FORMAT("%p", pBase->hGetHandle());
+            tableStr << STR_FORMAT("%p", pBase->objGetPtr());
+            pBase = LIST_NEXT(pBase, m_field);
+        }
+
+        DCOP_END_TIME();
+
+        logPrint(STR_FORMAT("%s Dump: (Count: %d) \r\n", OSTYPE_INFO[i], dwCount), logPara);
+        tableStr.Show(logPrint, logPara, "=", "-");
+        logPrint(STR_FORMAT("[cost time: %d ms] \r\n", DCOP_COST_TIME()), logPara);
     }
-
-    DCOP_END_TIME();
-
-    logPrint(STR_FORMAT("%s Dump: (Count: %d) \r\n", OSTYPE_INFO[osType], dwCount), logPara);
-    tableStr.Show(logPrint, logPara, "=", "-");
-    logPrint(STR_FORMAT("[cost time: %d ms] \r\n", DCOP_COST_TIME()), logPara);
 }
 
