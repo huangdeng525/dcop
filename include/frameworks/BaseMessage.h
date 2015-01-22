@@ -193,7 +193,7 @@ const BYTE DCOP_MSG_HEAD_SIZE[] =
 /// -------------------------------------------------
 /// SESSION头部字节序转换规则
 /// -------------------------------------------------
-#define BYTES_CHANGE_SESSION_HEAD_ORDER(pHead) \
+#define BYTES_CHANGE_SESSION_HEAD_ORDER(pHead)      \
     const BYTES_CHANGE_RULE DCOP_SESSION_HEAD_BORULE[] = \
     { \
         {SIZE_OF(DCOP_MSG_HEAD, m_valueLen), OFFSET_OF(DCOP_MSG_HEAD, m_valueLen)}, \
@@ -212,7 +212,7 @@ const BYTE DCOP_MSG_HEAD_SIZE[] =
 /// -------------------------------------------------
 /// CONDITION头部字节序转换规则
 /// -------------------------------------------------
-#define BYTES_CHANGE_CONDITION_HEAD_ORDER(pHead) \
+#define BYTES_CHANGE_CONDITION_HEAD_ORDER(pHead)    \
     const BYTES_CHANGE_RULE DCOP_CONDITION_HEAD_BORULE[] = \
     { \
         {SIZE_OF(DCOP_MSG_HEAD, m_valueLen), OFFSET_OF(DCOP_MSG_HEAD, m_valueLen)}, \
@@ -225,7 +225,7 @@ const BYTE DCOP_MSG_HEAD_SIZE[] =
 /// -------------------------------------------------
 /// REQUEST头部字节序转换规则
 /// -------------------------------------------------
-#define BYTES_CHANGE_REQUEST_HEAD_ORDER(pHead) \
+#define BYTES_CHANGE_REQUEST_HEAD_ORDER(pHead)      \
     const BYTES_CHANGE_RULE DCOP_REQUEST_HEAD_BORULE[] = \
     { \
         {SIZE_OF(DCOP_MSG_HEAD, m_valueLen), OFFSET_OF(DCOP_MSG_HEAD, m_valueLen)}, \
@@ -239,7 +239,7 @@ const BYTE DCOP_MSG_HEAD_SIZE[] =
 /// -------------------------------------------------
 /// RESPONSE头部字节序转换规则
 /// -------------------------------------------------
-#define BYTES_CHANGE_RESPONSE_HEAD_ORDER(pHead) \
+#define BYTES_CHANGE_RESPONSE_HEAD_ORDER(pHead)     \
     const BYTES_CHANGE_RULE DCOP_RESPONSE_HEAD_BORULE[] = \
     { \
         {SIZE_OF(DCOP_MSG_HEAD, m_valueLen), OFFSET_OF(DCOP_MSG_HEAD, m_valueLen)}, \
@@ -256,7 +256,7 @@ const BYTE DCOP_MSG_HEAD_SIZE[] =
 /// -------------------------------------------------
 /// EVENT头部字节序转换规则
 /// -------------------------------------------------
-#define BYTES_CHANGE_EVENT_HEAD_ORDER(pHead) \
+#define BYTES_CHANGE_EVENT_HEAD_ORDER(pHead)        \
     const BYTES_CHANGE_RULE DCOP_EVENT_HEAD_BORULE[] = \
     { \
         {SIZE_OF(DCOP_MSG_HEAD, m_valueLen), OFFSET_OF(DCOP_MSG_HEAD, m_valueLen)}, \
@@ -272,7 +272,7 @@ const BYTE DCOP_MSG_HEAD_SIZE[] =
 /// -------------------------------------------------
 /// PARA节点字节序转换规则
 /// -------------------------------------------------
-#define BYTES_CHANGE_PARA_NODE_ORDER(pNode, Count) \
+#define BYTES_CHANGE_PARA_NODE_ORDER(pNode, Count)  \
     const BYTES_CHANGE_RULE DCOP_PARA_NODE_BORULE[] = \
     { \
         {SIZE_OF(DCOP_PARA_NODE, m_paraID), OFFSET_OF(DCOP_PARA_NODE, m_paraID)}, \
