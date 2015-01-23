@@ -8,6 +8,7 @@
 #include "ObjControl_main.h"
 #include "Factory_if.h"
 #include "Manager_if.h"
+#include "string/tablestring.h"
 
 
 /// -------------------------------------------------
@@ -43,8 +44,6 @@ DCOP_IMPLEMENT_IOBJECT_END
  *******************************************************/
 CControl::CControl(Instance *piParent, int argc, char **argv)
 {
-    
-
     DCOP_CONSTRUCT_INSTANCE(piParent);
     DCOP_CONSTRUCT_IOBJECT(argc, argv);
 }
@@ -93,7 +92,6 @@ DWORD CControl::Init(IObject *root, int argc, void **argv)
  *******************************************************/
 void CControl::Fini()
 {
-    
 }
 
 /*******************************************************
@@ -122,6 +120,95 @@ void CControl::Proc(objMsg *msg)
  *******************************************************/
 void CControl::Dump(LOG_PRINT logPrint, LOG_PARA logPara, int argc, void **argv)
 {
+    if (!logPrint) return;
 
+    AutoObjLock(this);
+
+    for (IT_CHAIN it = m_chains.begin(); it != m_chains.end(); ++it)
+    {
+        ((*it).second).Dump(logPrint, logPara, argc, argv);
+    }
+}
+
+/*******************************************************
+  函 数 名: CControl::CreateChain
+  描    述: 创建控制链
+  输    入: 
+  输    出: 
+  返    回: 
+  修改记录: 
+ *******************************************************/
+IControl::IChain *CControl::CreateChain(IObject *ctrlee)
+{
+    if (!ctrlee) return NULL;
+
+    AutoObjLock(this);
+
+    IT_CHAIN it = m_chains.find(ctrlee->ID());
+    if (it != m_chains.end())
+    {
+        return &((*it).second);
+    }
+
+    CControlChain chain;
+    it = m_chains.insert(m_chains.end(), MAP_CHAIN::value_type(ctrlee->ID(), chain));
+    if (it == m_chains.end())
+    {
+        return NULL;
+    }
+
+    CControlChain *pChain = &((*it).second);
+    pChain->SetCtrlee(ctrlee);
+
+    return pChain;
+}
+
+/*******************************************************
+  函 数 名: CControl::DestroyChain
+  描    述: 删除控制链
+  输    入: 
+  输    出: 
+  返    回: 
+  修改记录: 
+ *******************************************************/
+void CControl::DestroyChain(IChain *chain)
+{
+    if (!chain) return;
+
+    AutoObjLock(this);
+
+    CControlChain *pChain = (CControlChain *)chain;
+    IObject *piCtrlee = pChain->GetCtrlee();
+    if (!piCtrlee)
+    {
+        return;
+    }
+
+    (void)m_chains.erase(piCtrlee->ID());
+}
+
+/*******************************************************
+  函 数 名: CControl::RegCtrlNode
+  描    述: 注册控制点
+  输    入: 
+  输    出: 
+  返    回: 
+  修改记录: 
+ *******************************************************/
+DWORD CControl::RegCtrlNode(IObject *ctrler,
+                    DWORD ctrlee,
+                    Node *ctrls,
+                    DWORD count)
+{
+    AutoObjLock(this);
+
+    IT_CHAIN it = m_chains.find(ctrlee);
+    if (it == m_chains.end())
+    {
+        return FAILURE;
+    }
+
+    CControlChain *pChain = &((*it).second);
+    return pChain->RegCtrlNode(ctrler, ctrls, count);
 }
 
