@@ -23,7 +23,8 @@ INTF_VER(IControl, 1, 0, 0);
 interface IControl : public IObject
 {
     /// 控制回调函数
-    typedef DWORD (*ON_CTRL_FUNC)(objMsg *pInput,
+    typedef DWORD (*ON_CTRL_FUNC)(
+                        objMsg *pInput,
                         objMsg *&pOutput,
                         bool &bContinue,
                         IObject *piCtrler

@@ -132,7 +132,7 @@ void CControl::Dump(LOG_PRINT logPrint, LOG_PARA logPara, int argc, void **argv)
 
 /*******************************************************
   函 数 名: CControl::CreateChain
-  描    述: Dump
+  描    述: 创建控制链
   输    入: 
   输    出: 
   返    回: 
@@ -165,7 +165,7 @@ IControl::IChain *CControl::CreateChain(IObject *ctrlee)
 
 /*******************************************************
   函 数 名: CControl::DestroyChain
-  描    述: Dump
+  描    述: 删除控制链
   输    入: 
   输    出: 
   返    回: 
@@ -189,7 +189,7 @@ void CControl::DestroyChain(IChain *chain)
 
 /*******************************************************
   函 数 名: CControl::RegCtrlNode
-  描    述: Dump
+  描    述: 注册控制点
   输    入: 
   输    出: 
   返    回: 

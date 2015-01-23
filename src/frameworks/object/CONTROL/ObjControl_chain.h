@@ -13,6 +13,9 @@
 #include "array/darray.h"
 
 
+/// -------------------------------------------------
+/// ¿ØÖÆÁ´
+/// -------------------------------------------------
 class CControlChain : public IControl::IChain
 {
 public:
@@ -49,3 +52,4 @@ private:
 
 
 #endif // #ifndef _OBJCONTROL_CHAIN_H_
+
