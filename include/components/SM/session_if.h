@@ -123,4 +123,3 @@ interface ISession : public IObject
 
 #endif // #ifndef _SESSION_IF_H_
 
-
