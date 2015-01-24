@@ -37,12 +37,10 @@ DWORD STUB_TaskCreate(OSHANDLE *pHandle,
         return ERRCODE_TASK_WRONG_HANDLE;
     }
 
-    DWORD dwRc;
     pthread_t a_thread;
     pthread_attr_t thread_attr;
-    /// void *thread_result;
 
-    dwRc = pthread_attr_init(&thread_attr);
+    DWORD dwRc = pthread_attr_init(&thread_attr);
     if (dwRc != 0)
     {
         return (errno)? (DWORD)(errno) : ERRCODE_TASK_CREATE_FAIL;
