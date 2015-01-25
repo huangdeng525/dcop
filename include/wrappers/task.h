@@ -11,12 +11,15 @@
 #include "dcop.h"
 
 
+/// -------------------------------------------------
 /// 创建任务的宏
+/// -------------------------------------------------
 #define DCOP_CreateTask(cszName, pEntry, dwStackSize, dwPriority, pPara) \
     objTask::CreateInstance(cszName, pEntry, dwStackSize, dwPriority, pPara, __FILE__, __LINE__)
 
-
+/// -------------------------------------------------
 /// 任务对象(任务从入口退出时会析构本任务对象)
+/// -------------------------------------------------
 class objTask
 {
 public:
@@ -55,7 +58,9 @@ public:
 };
 
 
+/// -------------------------------------------------
 /// 原子操作对象
+/// -------------------------------------------------
 class objAtomic
 {
 public:
@@ -71,7 +76,9 @@ public:
 };
 
 
+/// -------------------------------------------------
 /// 自旋锁(利用原子操作完成锁状态/不能嵌套使用)
+/// -------------------------------------------------
 class objSpinLock
 {
 public:
@@ -86,7 +93,9 @@ private:
 };
 
 
+/// -------------------------------------------------
 /// 自动自旋锁
+/// -------------------------------------------------
 #define AutoSpinLock(x) AutoSpinLockLine(x, __LINE__)
 #define AutoSpinLockLine(x, line) AutoSpinLockLineEx(x, __LINE__)
 #define AutoSpinLockLineEx(x, line) AutoSpinLockEx __tmp_##line(x)
@@ -101,12 +110,15 @@ private:
 };
 
 
+/// -------------------------------------------------
 /// 创建随机数对象
+/// -------------------------------------------------
 #define DCOP_CreateRandom() \
     objRandom::CreateInstance(__FILE__, __LINE__)
 
-
+/// -------------------------------------------------
 /// 随机数对象
+/// -------------------------------------------------
 class objRandom
 {
 public:

@@ -18,7 +18,14 @@
 
 #define  LINUX_SEM_DELAY_TICK 50
 
-
+/*******************************************************
+  函 数 名: STUB_MutexInitialize
+  描    述: 初始化互斥量
+  输    入: 
+  输    出: 
+  返    回: 
+  修改记录: 
+ *******************************************************/
 void STUB_MutexInitialize(OSHANDLE *pHandle, 
                         const char *file, int line)
 {
@@ -49,7 +56,14 @@ void STUB_MutexInitialize(OSHANDLE *pHandle,
     *pHandle = (OSHANDLE)(pMutex);
 }
 
-
+/*******************************************************
+  函 数 名: STUB_MutexDestroy
+  描    述: 删除互斥量
+  输    入: 
+  输    出: 
+  返    回: 
+  修改记录: 
+ *******************************************************/
 void STUB_MutexDestroy(OSHANDLE Handle)
 {
     if (!Handle)
@@ -63,6 +77,14 @@ void STUB_MutexDestroy(OSHANDLE Handle)
     delete pMutex;
 }
 
+/*******************************************************
+  函 数 名: STUB_MutexEnter
+  描    述: 进入互斥区
+  输    入: 
+  输    出: 
+  返    回: 
+  修改记录: 
+ *******************************************************/
 void STUB_MutexEnter(OSHANDLE Handle)
 {
     if (!Handle)
@@ -73,6 +95,14 @@ void STUB_MutexEnter(OSHANDLE Handle)
     (void)pthread_mutex_lock((pthread_mutex_t *)Handle);
 }
 
+/*******************************************************
+  函 数 名: STUB_MutexLeave
+  描    述: 离开互斥区
+  输    入: 
+  输    出: 
+  返    回: 
+  修改记录: 
+ *******************************************************/
 void STUB_MutexLeave(OSHANDLE Handle)
 {
     if (!Handle)
@@ -83,6 +113,14 @@ void STUB_MutexLeave(OSHANDLE Handle)
     (void)pthread_mutex_unlock((pthread_mutex_t *)Handle);
 }
 
+/*******************************************************
+  函 数 名: STUB_CondInitialize
+  描    述: 初始化条件信号量
+  输    入: 
+  输    出: 
+  返    回: 
+  修改记录: 
+ *******************************************************/
 DWORD STUB_CondInitialize(OSHANDLE *pHandle, 
                         BOOL bHaveEvent, 
                         const char *file, int line)
@@ -122,6 +160,14 @@ DWORD STUB_CondInitialize(OSHANDLE *pHandle,
     return SUCCESS;
 }
 
+/*******************************************************
+  函 数 名: STUB_CondDestroy
+  描    述: 删除条件信号量
+  输    入: 
+  输    出: 
+  返    回: 
+  修改记录: 
+ *******************************************************/
 DWORD STUB_CondDestroy(OSHANDLE Handle)
 {
     if (!Handle)
@@ -141,6 +187,14 @@ DWORD STUB_CondDestroy(OSHANDLE Handle)
     return SUCCESS;
 }
 
+/*******************************************************
+  函 数 名: STUB_CondSend
+  描    述: 发送条件信号量
+  输    入: 
+  输    出: 
+  返    回: 
+  修改记录: 
+ *******************************************************/
 DWORD STUB_CondSend(OSHANDLE Handle)
 {
     if (!Handle)
@@ -156,6 +210,14 @@ DWORD STUB_CondSend(OSHANDLE Handle)
     return SUCCESS;
 }
 
+/*******************************************************
+  函 数 名: STUB_CondRecv
+  描    述: 接收条件信号量
+  输    入: 
+  输    出: 
+  返    回: 
+  修改记录: 
+ *******************************************************/
 DWORD STUB_CondRecv(OSHANDLE Handle, DWORD dwMilliseconds)
 {
     if (!Handle)
@@ -193,7 +255,7 @@ DWORD STUB_CondRecv(OSHANDLE Handle, DWORD dwMilliseconds)
     }
     pthread_mutex_unlock(pMutex);
 
-    if (ETIMEDOUT == iRc)
+    if ((iRc < 0) && (errno == ETIMEDOUT))
     {
         return ERRCODE_SEM_WAIT_TIMEOUT;
     }
@@ -206,6 +268,14 @@ DWORD STUB_CondRecv(OSHANDLE Handle, DWORD dwMilliseconds)
     return FAILURE;
 }
 
+/*******************************************************
+  函 数 名: STUB_SemInitialize
+  描    述: 初始化信号量
+  输    入: 
+  输    出: 
+  返    回: 
+  修改记录: 
+ *******************************************************/
 DWORD STUB_SemInitialize(OSHANDLE *pHandle, 
                         DWORD dwInitCount, 
                         DWORD dwMaxCount, 
@@ -241,6 +311,14 @@ DWORD STUB_SemInitialize(OSHANDLE *pHandle,
     return SUCCESS;
 }
 
+/*******************************************************
+  函 数 名: STUB_SemDestroy
+  描    述: 删除信号量
+  输    入: 
+  输    出: 
+  返    回: 
+  修改记录: 
+ *******************************************************/
 DWORD STUB_SemDestroy(OSHANDLE Handle)
 {
     if (!Handle)
@@ -258,6 +336,14 @@ DWORD STUB_SemDestroy(OSHANDLE Handle)
     return SUCCESS;
 }
 
+/*******************************************************
+  函 数 名: STUB_SemTake
+  描    述: 获取信号量
+  输    入: 
+  输    出: 
+  返    回: 
+  修改记录: 
+ *******************************************************/
 DWORD STUB_SemTake(OSHANDLE Handle, DWORD dwMilliseconds)
 {
     if (!Handle)
@@ -271,7 +357,7 @@ DWORD STUB_SemTake(OSHANDLE Handle, DWORD dwMilliseconds)
     /// 永远等待: 直接获取
     if (OSWAIT_FOREVER == dwMilliseconds)
     {
-        if (ETIMEDOUT == sem_wait(pSem))
+        if ((sem_wait(pSem) < 0) && (errno == ETIMEDOUT))
         {
             return ERRCODE_SEM_WAIT_TIMEOUT;
         }
@@ -290,9 +376,9 @@ DWORD STUB_SemTake(OSHANDLE Handle, DWORD dwMilliseconds)
             return SUCCESS;
         }
 
-        if (iRc != EPERM)
+        if (errno != EPERM)
         {
-            return (DWORD)iRc;
+            return (DWORD)errno;
         }
 
         objTask::Delay(LINUX_SEM_DELAY_TICK);
@@ -302,6 +388,14 @@ DWORD STUB_SemTake(OSHANDLE Handle, DWORD dwMilliseconds)
     return ERRCODE_SEM_WAIT_TIMEOUT;
 }
 
+/*******************************************************
+  函 数 名: STUB_SemGive
+  描    述: 释放信号量
+  输    入: 
+  输    出: 
+  返    回: 
+  修改记录: 
+ *******************************************************/
 DWORD STUB_SemGive(OSHANDLE Handle, DWORD dwGiveCount)
 {
     if (!Handle)
@@ -325,6 +419,14 @@ DWORD STUB_SemGive(OSHANDLE Handle, DWORD dwGiveCount)
     return SUCCESS;
 }
 
+/*******************************************************
+  函 数 名: vRegOsSemStubFunc
+  描    述: 注册信号量桩
+  输    入: 
+  输    出: 
+  返    回: 
+  修改记录: 
+ *******************************************************/
 void vRegOsSemStubFunc()
 {
     LockFuncs lockFuncs = 
@@ -358,8 +460,16 @@ void vRegOsSemStubFunc()
     vSetCounterFuncs(&counterFuncs);
 }
 
+/*******************************************************
+  函 数 名: CPPBUILDUNIT_AUTO
+  描    述: 自动安装信号量桩
+  输    入: 
+  输    出: 
+  返    回: 
+  修改记录: 
+ *******************************************************/
 CPPBUILDUNIT_AUTO(vRegOsSemStubFunc, 0);
 
 
-#endif
+#endif // #if DCOP_OS == DCOP_OS_LINUX
 

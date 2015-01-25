@@ -9,6 +9,9 @@
 
 #if DCOP_OS == DCOP_OS_LINUX
 
+/// -------------------------------------------------
+/// 实现任务接口桩
+/// -------------------------------------------------
 #include "taskApi.h"
 #include <pthread.h>
 #include <errno.h>
@@ -16,11 +19,14 @@
 #include <sys/syscall.h>
 #include <sys/types.h>
 
-
-/// -------------------------------------------------
-/// 实现任务接口桩
-/// -------------------------------------------------
-
+/*******************************************************
+  函 数 名: STUB_TaskCreate
+  描    述: 创建任务桩
+  输    入: 
+  输    出: 
+  返    回: 
+  修改记录: 
+ *******************************************************/
 DWORD STUB_TaskCreate(OSHANDLE *pHandle,
             const char *cszName,
             DWORD *pdwID,
@@ -62,6 +68,14 @@ DWORD STUB_TaskCreate(OSHANDLE *pHandle,
     return SUCCESS;
 }
 
+/*******************************************************
+  函 数 名: STUB_TaskDestroy
+  描    述: 删除任务桩
+  输    入: 
+  输    出: 
+  返    回: 
+  修改记录: 
+ *******************************************************/
 DWORD STUB_TaskDestroy(OSHANDLE Handle, 
         const char *cszName,
         DWORD dwID)
@@ -81,6 +95,14 @@ DWORD STUB_TaskDestroy(OSHANDLE Handle,
     return SUCCESS;
 }
 
+/*******************************************************
+  函 数 名: STUB_TaskDelay
+  描    述: 任务延时桩
+  输    入: 
+  输    出: 
+  返    回: 
+  修改记录: 
+ *******************************************************/
 void STUB_TaskDelay(DWORD dwMilliseconds)
 {
     /// 在linux下调用sleep是用时钟的,一个进程的时钟系统是有限制的
@@ -96,11 +118,27 @@ void STUB_TaskDelay(DWORD dwMilliseconds)
     (void)select(0, NULL, NULL, NULL, &timeout);
 }
 
+/*******************************************************
+  函 数 名: STUB_TaskCurrent
+  描    述: 获取当前任务桩
+  输    入: 
+  输    出: 
+  返    回: 
+  修改记录: 
+ *******************************************************/
 DWORD STUB_TaskCurrent()
 {
     return (DWORD)syscall(SYS_gettid);
 }
 
+/*******************************************************
+  函 数 名: vRegOsTaskStubFunc
+  描    述: 注册任务桩
+  输    入: 
+  输    出: 
+  返    回: 
+  修改记录: 
+ *******************************************************/
 void vRegOsTaskStubFunc()
 {
     TaskFuncs funcs = 
@@ -114,40 +152,95 @@ void vRegOsTaskStubFunc()
     vSetTaskFuncs(&funcs);
 }
 
+/*******************************************************
+  函 数 名: CPPBUILDUNIT_AUTO
+  描    述: 自动安装任务桩
+  输    入: 
+  输    出: 
+  返    回: 
+  修改记录: 
+ *******************************************************/
 CPPBUILDUNIT_AUTO(vRegOsTaskStubFunc, 0);
 
 
 /// -------------------------------------------------
 /// 实现原子操作
 /// -------------------------------------------------
-
 #include "task.h"
 
+/*******************************************************
+  函 数 名: objAtomic::Inc
+  描    述: 原子递增
+  输    入: 
+  输    出: 
+  返    回: 
+  修改记录: 
+ *******************************************************/
 objAtomic::T objAtomic::Inc(T &val)
 {
     return (T)__sync_add_and_fetch(&val, 1);
 }
 
+/*******************************************************
+  函 数 名: objAtomic::Dec
+  描    述: 原子递减
+  输    入: 
+  输    出: 
+  返    回: 
+  修改记录: 
+ *******************************************************/
 objAtomic::T objAtomic::Dec(T &val)
 {
     return (T)__sync_sub_and_fetch(&val, 1);
 }
 
+/*******************************************************
+  函 数 名: objAtomic::Add
+  描    述: 原子加
+  输    入: 
+  输    出: 
+  返    回: 
+  修改记录: 
+ *******************************************************/
 objAtomic::T objAtomic::Add(T &val, T add)
 {
     return (T)__sync_add_and_fetch(&val, add);
 }
 
+/*******************************************************
+  函 数 名: objAtomic::Sub
+  描    述: 原子减
+  输    入: 
+  输    出: 
+  返    回: 
+  修改记录: 
+ *******************************************************/
 objAtomic::T objAtomic::Sub(T &val, T sub)
 {
     return (T)__sync_sub_and_fetch(&val, sub);
 }
 
+/*******************************************************
+  函 数 名: objAtomic::Set
+  描    述: 原子设置
+  输    入: 
+  输    出: 
+  返    回: 
+  修改记录: 
+ *******************************************************/
 objAtomic::T objAtomic::Set(T &val, T set)
 {
     return (T)__sync_lock_test_and_set(&val, set);
 }
 
+/*******************************************************
+  函 数 名: objAtomic::CAS
+  描    述: 原子比较交换锁
+  输    入: 
+  输    出: 
+  返    回: 
+  修改记录: 
+ *******************************************************/
 bool objAtomic::CAS(T &val, T cmp, T swap)
 {
     return __sync_bool_compare_and_swap(&val, cmp, swap);
@@ -157,13 +250,15 @@ bool objAtomic::CAS(T &val, T cmp, T swap)
 /// -------------------------------------------------
 /// 实现随机数操作
 /// -------------------------------------------------
-
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <sys/time.h>
 #include <unistd.h>
 #include <fcntl.h>
 
+/// -------------------------------------------------
+/// linux dev真随机数
+/// -------------------------------------------------
 class CDevRandom : public objRandom
 {
 public:
@@ -180,6 +275,14 @@ private:
     void Rand(void *pBuf, DWORD dwLen);
 };
 
+/*******************************************************
+  函 数 名: CDevRandom::CDevRandom
+  描    述: CDevRandom构造
+  输    入: 
+  输    出: 
+  返    回: 
+  修改记录: 
+ *******************************************************/
 CDevRandom::CDevRandom()
 {
     unsigned int ticks;
@@ -203,10 +306,26 @@ CDevRandom::CDevRandom()
     srand(ticks);
 }
 
+/*******************************************************
+  函 数 名: CDevRandom::~CDevRandom
+  描    述: CDevRandom析构
+  输    入: 
+  输    出: 
+  返    回: 
+  修改记录: 
+ *******************************************************/
 CDevRandom::~CDevRandom()
 {
 }
 
+/*******************************************************
+  函 数 名: CDevRandom::Gen
+  描    述: 获取随机数
+  输    入: 
+  输    出: 
+  返    回: 
+  修改记录: 
+ *******************************************************/
 void CDevRandom::Gen(void *pBuf, DWORD dwLen)
 {
     if (!pBuf || !dwLen)
@@ -215,7 +334,8 @@ void CDevRandom::Gen(void *pBuf, DWORD dwLen)
     }
 
     DWORD dwReadLen = 0;
-    
+
+    /// "/dev/urandom"设备不会阻塞，但是可能出现获取失败
     int fd = open("/dev/urandom", O_RDONLY);
     if (fd >= 0)
     {
@@ -230,12 +350,21 @@ void CDevRandom::Gen(void *pBuf, DWORD dwLen)
         close(fd);
     }
 
+    /// 获取失败后就只有利用非真随机数获取
     if (dwReadLen < dwLen)
     {
         Rand((BYTE *)pBuf + dwReadLen, dwLen - dwReadLen);
     }
 }
 
+/*******************************************************
+  函 数 名: CDevRandom::Rand
+  描    述: 模拟随机数
+  输    入: 
+  输    出: 
+  返    回: 
+  修改记录: 
+ *******************************************************/
 void CDevRandom::Rand(void *pBuf, DWORD dwLen)
 {
     DWORD dwReadLen = 0;
@@ -247,6 +376,14 @@ void CDevRandom::Rand(void *pBuf, DWORD dwLen)
     }
 }
 
+/*******************************************************
+  函 数 名: objRandom::CreateInstance
+  描    述: 创建随机数实例
+  输    入: 
+  输    出: 
+  返    回: 
+  修改记录: 
+ *******************************************************/
 objRandom *objRandom::CreateInstance(const char *file, int line)
 {
     #undef new
@@ -254,6 +391,14 @@ objRandom *objRandom::CreateInstance(const char *file, int line)
     #define new new(__FILE__, __LINE__)
 }
 
+/*******************************************************
+  函 数 名: objRandom::~objRandom
+  描    述: 基类析构
+  输    入: 
+  输    出: 
+  返    回: 
+  修改记录: 
+ *******************************************************/
 objRandom::~objRandom()
 {
 }
@@ -262,11 +407,18 @@ objRandom::~objRandom()
 /// -------------------------------------------------
 /// 实现获取调用栈操作
 /// -------------------------------------------------
-
 #include <execinfo.h>
 
 #define CALLSTACK_DEPTH_MAX 10
 
+/*******************************************************
+  函 数 名: ShowCallStack
+  描    述: 显示调用栈
+  输    入: 
+  输    出: 
+  返    回: 
+  修改记录: 
+ *******************************************************/
 void ShowCallStack(LOG_PRINT print, LOG_PARA para, int depth)
 {
     void *stack_addr[CALLSTACK_DEPTH_MAX];
@@ -307,5 +459,5 @@ void ShowCallStack(LOG_PRINT print, LOG_PARA para, int depth)
 }
 
 
-#endif
+#endif // #if DCOP_OS == DCOP_OS_LINUX
 

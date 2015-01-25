@@ -12,11 +12,12 @@
 /// -------------------------------------------------
 /// 实现任务接口桩
 /// -------------------------------------------------
-
 #include "taskApi.h"
 #include <windows.h>
 
-
+/// -------------------------------------------------
+/// 任务优先级
+/// -------------------------------------------------
 static int aiTaskPrio[] = 
 {
     THREAD_PRIORITY_LOWEST,
@@ -26,6 +27,14 @@ static int aiTaskPrio[] =
     THREAD_PRIORITY_HIGHEST
 };
 
+/*******************************************************
+  函 数 名: STUB_TaskCreate
+  描    述: 创建任务桩
+  输    入: 
+  输    出: 
+  返    回: 
+  修改记录: 
+ *******************************************************/
 DWORD STUB_TaskCreate(OSHANDLE *pHandle,
             const char *cszName,
             DWORD *pdwID,
@@ -87,6 +96,14 @@ ERROR_LABEL:
     return dwRc;
 }
 
+/*******************************************************
+  函 数 名: STUB_TaskDestroy
+  描    述: 删除任务桩
+  输    入: 
+  输    出: 
+  返    回: 
+  修改记录: 
+ *******************************************************/
 DWORD STUB_TaskDestroy(OSHANDLE Handle, 
         const char *cszName,
         DWORD dwID)
@@ -122,16 +139,40 @@ ERROR_LABEL:
     return dwRc;
 }
 
+/*******************************************************
+  函 数 名: STUB_TaskDelay
+  描    述: 任务延时桩
+  输    入: 
+  输    出: 
+  返    回: 
+  修改记录: 
+ *******************************************************/
 void STUB_TaskDelay(DWORD dwMilliseconds)
 {
     Sleep(dwMilliseconds);
 }
 
+/*******************************************************
+  函 数 名: STUB_TaskCurrent
+  描    述: 获取当前任务桩
+  输    入: 
+  输    出: 
+  返    回: 
+  修改记录: 
+ *******************************************************/
 DWORD STUB_TaskCurrent()
 {
     return GetCurrentThreadId();
 }
 
+/*******************************************************
+  函 数 名: vRegOsTaskStubFunc
+  描    述: 注册任务桩
+  输    入: 
+  输    出: 
+  返    回: 
+  修改记录: 
+ *******************************************************/
 void vRegOsTaskStubFunc()
 {
     TaskFuncs funcs = 
@@ -145,40 +186,95 @@ void vRegOsTaskStubFunc()
     vSetTaskFuncs(&funcs);
 }
 
+/*******************************************************
+  函 数 名: CPPBUILDUNIT_AUTO
+  描    述: 自动安装任务桩
+  输    入: 
+  输    出: 
+  返    回: 
+  修改记录: 
+ *******************************************************/
 CPPBUILDUNIT_AUTO(vRegOsTaskStubFunc, 0);
 
 
 /// -------------------------------------------------
 /// 实现原子操作
 /// -------------------------------------------------
-
 #include "task.h"
 
+/*******************************************************
+  函 数 名: objAtomic::Inc
+  描    述: 原子递增
+  输    入: 
+  输    出: 
+  返    回: 
+  修改记录: 
+ *******************************************************/
 objAtomic::T objAtomic::Inc(T &val)
 {
     return (T)InterlockedIncrement((LPLONG)&val);
 }
 
+/*******************************************************
+  函 数 名: objAtomic::Dec
+  描    述: 原子递减
+  输    入: 
+  输    出: 
+  返    回: 
+  修改记录: 
+ *******************************************************/
 objAtomic::T objAtomic::Dec(T &val)
 {
     return (T)InterlockedDecrement((LPLONG)&val);
 }
 
+/*******************************************************
+  函 数 名: objAtomic::Add
+  描    述: 原子加
+  输    入: 
+  输    出: 
+  返    回: 
+  修改记录: 
+ *******************************************************/
 objAtomic::T objAtomic::Add(T &val, T add)
 {
     return (T)InterlockedExchangeAdd((LPLONG)&val, (LONG)add);
 }
 
+/*******************************************************
+  函 数 名: objAtomic::Sub
+  描    述: 原子减
+  输    入: 
+  输    出: 
+  返    回: 
+  修改记录: 
+ *******************************************************/
 objAtomic::T objAtomic::Sub(T &val, T sub)
 {
     return (T)InterlockedExchangeAdd((LPLONG)&val, 0 - (LONG)sub);
 }
 
+/*******************************************************
+  函 数 名: objAtomic::Set
+  描    述: 原子设置
+  输    入: 
+  输    出: 
+  返    回: 
+  修改记录: 
+ *******************************************************/
 objAtomic::T objAtomic::Set(T &val, T set)
 {
     return (T)InterlockedExchange((LPLONG)&val, (LONG)set);
 }
 
+/*******************************************************
+  函 数 名: objAtomic::CAS
+  描    述: 原子比较交换锁
+  输    入: 
+  输    出: 
+  返    回: 
+  修改记录: 
+ *******************************************************/
 bool objAtomic::CAS(T &val, T cmp, T swap)
 {
     return (InterlockedCompareExchange((LPLONG)&val, (LONG)swap, (LONG)cmp) == (LONG)cmp)? true : false;
@@ -188,9 +284,11 @@ bool objAtomic::CAS(T &val, T cmp, T swap)
 /// -------------------------------------------------
 /// 实现随机数操作
 /// -------------------------------------------------
-
 #include <wincrypt.h>
 
+/// -------------------------------------------------
+/// windows Crypt真随机数
+/// -------------------------------------------------
 class CCryptRandom : public objRandom
 {
 public:
@@ -208,6 +306,14 @@ private:
     HCRYPTPROV m_hCryptProv;
 };
 
+/*******************************************************
+  函 数 名: CCryptRandom::CCryptRandom
+  描    述: CCryptRandom构造
+  输    入: 
+  输    出: 
+  返    回: 
+  修改记录: 
+ *******************************************************/
 CCryptRandom::CCryptRandom()
 {
     m_hCryptProv = NULL;
@@ -215,11 +321,27 @@ CCryptRandom::CCryptRandom()
     srand((unsigned)time(NULL));
 }
 
+/*******************************************************
+  函 数 名: CCryptRandom::~CCryptRandom
+  描    述: CCryptRandom析构
+  输    入: 
+  输    出: 
+  返    回: 
+  修改记录: 
+ *******************************************************/
 CCryptRandom::~CCryptRandom()
 {
     if (m_hCryptProv) CryptReleaseContext(m_hCryptProv, 0);
 }
 
+/*******************************************************
+  函 数 名: CCryptRandom::Gen
+  描    述: 获取随机数
+  输    入: 
+  输    出: 
+  返    回: 
+  修改记录: 
+ *******************************************************/
 void CCryptRandom::Gen(void *pBuf, DWORD dwLen)
 {
     if (!pBuf || !dwLen)
@@ -245,6 +367,14 @@ void CCryptRandom::Gen(void *pBuf, DWORD dwLen)
     }
 }
 
+/*******************************************************
+  函 数 名: CCryptRandom::Rand
+  描    述: 模拟随机数
+  输    入: 
+  输    出: 
+  返    回: 
+  修改记录: 
+ *******************************************************/
 void CCryptRandom::Rand(void *pBuf, DWORD dwLen)
 {
     DWORD dwReadLen = 0;
@@ -256,6 +386,14 @@ void CCryptRandom::Rand(void *pBuf, DWORD dwLen)
     }
 }
 
+/*******************************************************
+  函 数 名: objRandom::CreateInstance
+  描    述: 创建随机数实例
+  输    入: 
+  输    出: 
+  返    回: 
+  修改记录: 
+ *******************************************************/
 objRandom *objRandom::CreateInstance(const char *file, int line)
 {
     #undef new
@@ -263,6 +401,14 @@ objRandom *objRandom::CreateInstance(const char *file, int line)
     #define new new(__FILE__, __LINE__)
 }
 
+/*******************************************************
+  函 数 名: objRandom::~objRandom
+  描    述: 基类析构
+  输    入: 
+  输    出: 
+  返    回: 
+  修改记录: 
+ *******************************************************/
 objRandom::~objRandom()
 {
 }
@@ -271,11 +417,12 @@ objRandom::~objRandom()
 /// -------------------------------------------------
 /// 实现获取调用栈操作
 /// -------------------------------------------------
-
 #include <dbghelp.h>
 #pragma comment( lib, "dbghelp.lib" )
 
-// Architecture-specific definitions for x86 and x64
+/// -------------------------------------------------
+/// Architecture-specific definitions for x86 and x64
+/// -------------------------------------------------
 #if defined(_M_IX86)
 #define SIZEOFPTR 4
 #define X86X64ARCHITECTURE IMAGE_FILE_MACHINE_I386
@@ -293,7 +440,14 @@ objRandom::~objRandom()
 BOOL g_fSymInit = FALSE;
 HANDLE g_hProcess = NULL;
 
-/// address of the founction stack-call to walk.
+/*******************************************************
+  函 数 名: DisplaySymbolDetails
+  描    述: address of the founction stack-call to walk.
+  输    入: 
+  输    出: 
+  返    回: 
+  修改记录: 
+ *******************************************************/
 void DisplaySymbolDetails(DWORD_PTR dwAddress, LOG_PRINT logPrint, LOG_PARA logPara)
 {
     DWORD64 displacement = 0;
@@ -333,7 +487,14 @@ void DisplaySymbolDetails(DWORD_PTR dwAddress, LOG_PRINT logPrint, LOG_PARA logP
     }
 }
 
-/// 采用内联汇编获取当前stack Frame地址和当前程序指令地址.
+/*******************************************************
+  函 数 名: WalkTheStack
+  描    述: 采用内联汇编获取当前stack Frame地址和当前程序指令地址
+  输    入: 
+  输    出: 
+  返    回: 
+  修改记录: 
+ *******************************************************/
 bool WalkTheStack(LOG_PRINT logPrint, LOG_PARA logPara, DWORD dwDepth)
 {
     DWORD_PTR framepointer = INVALID_FP_RET_ADDR_VALUE;
@@ -396,6 +557,14 @@ bool WalkTheStack(LOG_PRINT logPrint, LOG_PARA logPara, DWORD dwDepth)
     return true;
 }
 
+/*******************************************************
+  函 数 名: ShowCallStack
+  描    述: 显示调用栈
+  输    入: 
+  输    出: 
+  返    回: 
+  修改记录: 
+ *******************************************************/
 void ShowCallStack(LOG_PRINT print, LOG_PARA para, int depth)
 {
     if (!print)
@@ -430,5 +599,6 @@ void ShowCallStack(LOG_PRINT print, LOG_PARA para, int depth)
     }
 }
 
-#endif
+
+#endif // #if DCOP_OS == DCOP_OS_WINDOWS
 
