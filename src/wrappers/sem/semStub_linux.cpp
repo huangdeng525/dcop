@@ -471,5 +471,5 @@ void vRegOsSemStubFunc()
 CPPBUILDUNIT_AUTO(vRegOsSemStubFunc, 0);
 
 
-#endif
+#endif // #if DCOP_OS == DCOP_OS_LINUX
 

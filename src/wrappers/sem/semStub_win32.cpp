@@ -39,6 +39,14 @@
 /// =================================================
 
 
+/*******************************************************
+  函 数 名: STUB_CSInitialize
+  描    述: 初始化互斥量
+  输    入: 
+  输    出: 
+  返    回: 
+  修改记录: 
+ *******************************************************/
 void STUB_CSInitialize(OSHANDLE *pHandle, 
                         const char *file, int line)
 {
@@ -62,6 +70,14 @@ void STUB_CSInitialize(OSHANDLE *pHandle,
     *pHandle = (OSHANDLE)(pCS);
 }
 
+/*******************************************************
+  函 数 名: STUB_CSDelete
+  描    述: 删除互斥量
+  输    入: 
+  输    出: 
+  返    回: 
+  修改记录: 
+ *******************************************************/
 void STUB_CSDelete(OSHANDLE Handle)
 {
     if (!Handle)
@@ -76,6 +92,14 @@ void STUB_CSDelete(OSHANDLE Handle)
     delete pCS;
 }
 
+/*******************************************************
+  函 数 名: STUB_CSEnter
+  描    述: 进入互斥区
+  输    入: 
+  输    出: 
+  返    回: 
+  修改记录: 
+ *******************************************************/
 void STUB_CSEnter(OSHANDLE Handle)
 {
     if (!Handle)
@@ -86,6 +110,14 @@ void STUB_CSEnter(OSHANDLE Handle)
     EnterCriticalSection((CRITICAL_SECTION *)Handle);
 }
 
+/*******************************************************
+  函 数 名: STUB_CSLeave
+  描    述: 离开互斥区
+  输    入: 
+  输    出: 
+  返    回: 
+  修改记录: 
+ *******************************************************/
 void STUB_CSLeave(OSHANDLE Handle)
 {
     if (!Handle)
@@ -96,6 +128,14 @@ void STUB_CSLeave(OSHANDLE Handle)
     LeaveCriticalSection((CRITICAL_SECTION *)Handle);
 }
 
+/*******************************************************
+  函 数 名: STUB_EventCreate
+  描    述: 创建事件
+  输    入: 
+  输    出: 
+  返    回: 
+  修改记录: 
+ *******************************************************/
 DWORD STUB_EventCreate(OSHANDLE *pHandle, 
                         BOOL bHaveEvent, 
                         const char *file, int line)
@@ -125,6 +165,14 @@ ERROR_LABEL:
     return dwRc;
 }
 
+/*******************************************************
+  函 数 名: STUB_EventDestroy
+  描    述: 删除事件
+  输    入: 
+  输    出: 
+  返    回: 
+  修改记录: 
+ *******************************************************/
 DWORD STUB_EventDestroy(OSHANDLE Handle)
 {
     if (!Handle)
@@ -147,6 +195,14 @@ ERROR_LABEL:
     return dwRc;
 }
 
+/*******************************************************
+  函 数 名: STUB_EventSend
+  描    述: 发送事件
+  输    入: 
+  输    出: 
+  返    回: 
+  修改记录: 
+ *******************************************************/
 DWORD STUB_EventSend(OSHANDLE Handle)
 {
     if (!Handle)
@@ -169,6 +225,14 @@ ERROR_LABEL:
     return dwRc;
 }
 
+/*******************************************************
+  函 数 名: STUB_EventRecv
+  描    述: 接收事件
+  输    入: 
+  输    出: 
+  返    回: 
+  修改记录: 
+ *******************************************************/
 DWORD STUB_EventRecv(OSHANDLE Handle, DWORD dwMilliseconds)
 {
     if (!Handle)
@@ -192,6 +256,14 @@ ERROR_LABEL:
     return dwRc;
 }
 
+/*******************************************************
+  函 数 名: STUB_SemCreate
+  描    述: 创建信号量
+  输    入: 
+  输    出: 
+  返    回: 
+  修改记录: 
+ *******************************************************/
 DWORD STUB_SemCreate(OSHANDLE *pHandle, 
                         DWORD dwInitCount, 
                         DWORD dwMaxCount, 
@@ -222,6 +294,14 @@ ERROR_LABEL:
     return dwRc;
 }
 
+/*******************************************************
+  函 数 名: STUB_SemDestroy
+  描    述: 删除信号量
+  输    入: 
+  输    出: 
+  返    回: 
+  修改记录: 
+ *******************************************************/
 DWORD STUB_SemDestroy(OSHANDLE Handle)
 {
     if (!Handle)
@@ -244,6 +324,14 @@ ERROR_LABEL:
     return dwRc;
 }
 
+/*******************************************************
+  函 数 名: STUB_SemTake
+  描    述: 获取信号量
+  输    入: 
+  输    出: 
+  返    回: 
+  修改记录: 
+ *******************************************************/
 DWORD STUB_SemTake(OSHANDLE Handle, DWORD dwMilliseconds)
 {
     if (!Handle)
@@ -267,6 +355,14 @@ ERROR_LABEL:
     return dwRc;
 }
 
+/*******************************************************
+  函 数 名: STUB_SemGive
+  描    述: 释放信号量
+  输    入: 
+  输    出: 
+  返    回: 
+  修改记录: 
+ *******************************************************/
 DWORD STUB_SemGive(OSHANDLE Handle, DWORD dwGiveCount)
 {
     if (!Handle)
@@ -289,6 +385,14 @@ ERROR_LABEL:
     return dwRc;
 }
 
+/*******************************************************
+  函 数 名: vRegOsSemStubFunc
+  描    述: 注册信号量桩
+  输    入: 
+  输    出: 
+  返    回: 
+  修改记录: 
+ *******************************************************/
 void vRegOsSemStubFunc()
 {
     LockFuncs lockFuncs = 
@@ -322,8 +426,16 @@ void vRegOsSemStubFunc()
     vSetCounterFuncs(&counterFuncs);
 }
 
+/*******************************************************
+  函 数 名: CPPBUILDUNIT_AUTO
+  描    述: 自动安装信号量桩
+  输    入: 
+  输    出: 
+  返    回: 
+  修改记录: 
+ *******************************************************/
 CPPBUILDUNIT_AUTO(vRegOsSemStubFunc, 0);
 
 
-#endif
+#endif // #if DCOP_OS == DCOP_OS_WINDOWS
 
