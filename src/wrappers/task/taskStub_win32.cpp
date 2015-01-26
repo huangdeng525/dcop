@@ -297,6 +297,7 @@ public:
 public:
     CCryptRandom();
     ~CCryptRandom();
+
     void Gen(void *pBuf, DWORD dwLen);
 
 private:
@@ -597,6 +598,189 @@ void ShowCallStack(LOG_PRINT print, LOG_PARA para, int depth)
     {
         print("Stackwalk failed! \r\n", para);
     }
+}
+
+
+/// -------------------------------------------------
+/// 动态库加载操作
+/// -------------------------------------------------
+
+/// -------------------------------------------------
+/// windows 动态库
+/// -------------------------------------------------
+class CDynamicLibrary : public objDynamicLoader
+{
+public:
+    CDynamicLibrary();
+    ~CDynamicLibrary();
+
+    DWORD Load(const char *dllFile);
+    DWORD Unload();
+
+    void *FindSymbol(const char *symName);
+
+    void SetErrLog(LOG_PRINT logPrint, LOG_PARA logPara);
+
+private:
+    HMODULE m_handle;
+    LOG_PRINT m_logPrint;
+    LOG_PARA m_logPara;
+};
+
+/*******************************************************
+  函 数 名: CDynamicLibrary::CDynamicLibrary
+  描    述: CDynamicLibrary构造
+  输    入: 
+  输    出: 
+  返    回: 
+  修改记录: 
+ *******************************************************/
+CDynamicLibrary::CDynamicLibrary()
+{
+    m_handle = NULL;
+    m_logPrint = PrintToConsole;
+    m_logPara = 0;
+}
+
+/*******************************************************
+  函 数 名: CDynamicLibrary::~CDynamicLibrary
+  描    述: CDynamicLibrary析构
+  输    入: 
+  输    出: 
+  返    回: 
+  修改记录: 
+ *******************************************************/
+CDynamicLibrary::~CDynamicLibrary()
+{
+    (void)Unload();
+}
+
+/*******************************************************
+  函 数 名: CDynamicLibrary::Load
+  描    述: 加载
+  输    入: 
+  输    出: 
+  返    回: 
+  修改记录: 
+ *******************************************************/
+DWORD CDynamicLibrary::Load(const char *dllFile)
+{
+    if (!dllFile || !(*dllFile))
+    {
+        return FAILURE;
+    }
+
+    if (m_handle)
+    {
+        return FAILURE;
+    }
+
+    HMODULE hModule = LoadLibraryA(dllFile);
+    if (!hModule)
+    {
+        PrintLog(STR_FORMAT("LoadLibrary Fail(%d)!", GetLastError()), m_logPrint, m_logPara);
+        return FAILURE;
+    }
+
+    m_handle = hModule;
+    return SUCCESS;
+}
+
+/*******************************************************
+  函 数 名: CDynamicLibrary::Unload
+  描    述: 卸载
+  输    入: 
+  输    出: 
+  返    回: 
+  修改记录: 
+ *******************************************************/
+DWORD CDynamicLibrary::Unload()
+{
+    if (!m_handle)
+    {
+        return FAILURE;
+    }
+
+    BOOL bRc = FreeLibrary(m_handle);
+    if (bRc != TRUE)
+    {
+        PrintLog(STR_FORMAT("FreeLibrary Fail(%d)!", GetLastError()), m_logPrint, m_logPara);
+        return FAILURE;
+    }
+
+    m_handle = NULL;
+    return SUCCESS;
+}
+
+/*******************************************************
+  函 数 名: CDynamicLibrary::~CDynamicLibrary
+  描    述: CDynamicLibrary析构
+  输    入: 
+  输    出: 
+  返    回: 
+  修改记录: 
+ *******************************************************/
+void *CDynamicLibrary::FindSymbol(const char *symName)
+{
+    if (!symName || !(*symName))
+    {
+        return NULL;
+    }
+
+    if (!m_handle)
+    {
+        return NULL;
+    }
+
+    void *pSymAddr = (void *)GetProcAddress(m_handle, symName);
+    if (!pSymAddr)
+    {
+        PrintLog(STR_FORMAT("GetProcAddress(%s) Fail(%d)!", symName, GetLastError()), m_logPrint, m_logPara);
+        return NULL;
+    }
+
+    return pSymAddr;
+}
+
+/*******************************************************
+  函 数 名: CDynamicLibrary::~CDynamicLibrary
+  描    述: CDynamicLibrary析构
+  输    入: 
+  输    出: 
+  返    回: 
+  修改记录: 
+ *******************************************************/
+void CDynamicLibrary::SetErrLog(LOG_PRINT logPrint, LOG_PARA logPara)
+{
+    m_logPrint = (logPrint)? logPrint : PrintToConsole;
+    m_logPara = (logPrint)? logPara : 0;
+}
+
+/*******************************************************
+  函 数 名: objDynamicLoader::CreateInstance
+  描    述: 创建动态加载实例
+  输    入: 
+  输    出: 
+  返    回: 
+  修改记录: 
+ *******************************************************/
+objDynamicLoader *objDynamicLoader::CreateInstance(const char *file, int line)
+{
+    #undef new
+    return new (file, line) CDynamicLibrary();
+    #define new new(__FILE__, __LINE__)
+}
+
+/*******************************************************
+  函 数 名: objDynamicLoader::~objDynamicLoader
+  描    述: 基类析构
+  输    入: 
+  输    出: 
+  返    回: 
+  修改记录: 
+ *******************************************************/
+objDynamicLoader::~objDynamicLoader()
+{
 }
 
 
