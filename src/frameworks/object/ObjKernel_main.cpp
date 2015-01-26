@@ -16,7 +16,6 @@ CFrameKernel    CFrameKernel::sm_instance;
 void          (*g_onInstanceQueryInterface)(
                         Instance *piThis, 
                         Instance *piRefer, 
-                        const char *pinterfaceName, 
                         void *pPara) = 0;
 void *          g_onInstanceQueryInterfacePara = 0;
 void          (*g_onInstanceRelease)(
