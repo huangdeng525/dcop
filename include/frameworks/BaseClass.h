@@ -212,7 +212,6 @@ public:                                             \
 extern void (*g_onInstanceQueryInterface)(          \
                     Instance *piThis,               \
                     Instance *piRefer,              \
-                    const char *pinterfaceName,     \
                     void *pPara);                   \
 extern void * g_onInstanceQueryInterfacePara;       \
 extern void (*g_onInstanceRelease)(                 \
@@ -264,7 +263,7 @@ DWORD CMyClass::QueryInterface(const IntfNameVer& iid, void **ppv, Instance *pir
                         this);                      \
         (void)objAtomic::Inc(m_refCount);           \
         if (g_onInstanceQueryInterface && pir)      \
-            g_onInstanceQueryInterface(this, pir, #Interface, \
+            g_onInstanceQueryInterface(this, pir,   \
             g_onInstanceQueryInterfacePara);        \
         return SUCCESS;                             \
     }
