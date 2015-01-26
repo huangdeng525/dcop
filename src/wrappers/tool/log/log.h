@@ -75,5 +75,8 @@ private:
 };
 
 
+extern "C" void SetSysErrHandler();
+
+
 #endif // #ifndef _TOOL_LOG_LOG_H_
 
