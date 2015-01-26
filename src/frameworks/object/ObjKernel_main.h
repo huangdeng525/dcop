@@ -8,6 +8,8 @@
 #ifndef _OBJKERNEL_MAIN_H_
 #define _OBJKERNEL_MAIN_H_
 
+#define INC_MAP
+
 #include "../../wrappers/osBase.h"
 #include "BaseClass.h"
 #include "Manager_if.h"
@@ -16,20 +18,56 @@
 #include "sem.h"
 
 
+/// -------------------------------------------------
 /// 参数字符串最大长度
+/// -------------------------------------------------
 #define DCOP_STRING_ARG_LEM_MAX             64
 
-
+/// -------------------------------------------------
 /// 系统参数最大个数
+/// -------------------------------------------------
 #define DCOP_SYSTEM_ARG_MAX_COUNT           24
 
+/// -------------------------------------------------
 /// 对象参数对象个数
+/// -------------------------------------------------
 #define DCOP_OBJECT_ARG_MAX_COUNT           32
 
 
-/// Object框架核心实现类
+/// -------------------------------------------------
+/// 框架核心实现类
+/// -------------------------------------------------
 class CFrameKernel : public objBase, private osBase
 {
+public:
+    /// 引用节点
+    class CReferNode
+    {
+    public:
+        CReferNode() : m_refer(sizeof(Instance *)) {m_loader = 0;}
+        ~CReferNode()
+        {
+            if (m_loader)
+            {
+                delete m_loader;
+                m_loader = 0;
+            }
+        }
+
+        void SetLoader(objDynamicLoader *loader) {m_loader = loader;}
+
+        void OnReferto(Instance *refer) {}
+        void OnRelease(Instance *refer) {}
+
+    private:
+        objDynamicLoader *m_loader;
+        CDArray m_refer;
+    };
+
+    /// 引用MAP
+    typedef std::map<Instance *, CReferNode> MAP_REFERS;
+    typedef MAP_REFERS::iterator IT_REFERS;
+
 public:
     static CFrameKernel sm_instance;
 
@@ -42,8 +80,12 @@ public:
     objBase *Start(const char *cfgDeploy);
     void End(objBase *pBase);
 
-private:
-    IManager *Load(const char *xmlFile);
+public:
+    IManager *LoadAllObjects(const char *xmlFile);
+    IObject *Load(const char *cszName, IManager *piManager, int argc, char **argv);
+    objDynamicLoader *DynamicLoad(const char *dllFile);
+    DWORD AddRefer(Instance *piThis, Instance *piRefer, objDynamicLoader *pLoader = 0);
+    DWORD DelRefer(Instance *piThis, Instance *piRefer);
 
 private:
     DWORD GetXmlAttribute(const XMLElement *pXMLElement, CDArray &rArgs);
@@ -54,6 +96,7 @@ private:
 private:
     objLock *m_pLock;
     objTask *m_pTask;
+    MAP_REFERS m_refers;
 };
 
 

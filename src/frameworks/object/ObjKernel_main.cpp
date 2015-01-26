@@ -16,7 +16,6 @@ CFrameKernel    CFrameKernel::sm_instance;
 void          (*g_onInstanceQueryInterface)(
                         Instance *piThis, 
                         Instance *piRefer, 
-                        const char *pinterfaceName, 
                         void *pPara) = 0;
 void *          g_onInstanceQueryInterfacePara = 0;
 void          (*g_onInstanceRelease)(
@@ -140,7 +139,7 @@ objBase *CFrameKernel::Start(const char *cfgDeploy)
     /////////////////////////////////////////////////
     /// 加载管理器内所有对象
     /////////////////////////////////////////////////
-    IManager *piManager = Load(cfgDeploy);
+    IManager *piManager = LoadAllObjects(cfgDeploy);
     if (!piManager)
     {
         return NULL;
@@ -188,14 +187,14 @@ void CFrameKernel::End(objBase *pBase)
 }
 
 /*******************************************************
-  函 数 名: CFrameKernel::Load
+  函 数 名: CFrameKernel::LoadAllObjects
   描    述: 加载配置文件中的所有对象
   输    入: xmlFile     - 输入的xml配置文件
   输    出: 
   返    回: 
   修改记录: 
  *******************************************************/
-IManager *CFrameKernel::Load(const char *xmlFile)
+IManager *CFrameKernel::LoadAllObjects(const char *xmlFile)
 {
     DWORD dwRc;
     XMLDocument doc;
@@ -261,6 +260,130 @@ IManager *CFrameKernel::Load(const char *xmlFile)
     TRACE_LOG(STR_FORMAT("System(%d) CreateAllObjects OK!", piManager->GetSystemID()));
 
     return piManager;
+}
+
+/*******************************************************
+  函 数 名: CFrameKernel::Load
+  描    述: 加载单个对象
+  输    入: 
+  输    出: 
+  返    回: 
+  修改记录: 
+ *******************************************************/
+IObject *CFrameKernel::Load(const char *cszName, IManager *piManager, int argc, char **argv)
+{
+    IObject *piObject = 0;
+    DCOP_CREATE_INSTANCE(IObject, cszName, piManager, argc, argv, piObject);
+    if (!piObject)
+    {
+        CHECK_RETCODE(FAILURE, STR_FORMAT("Create Object: '%s' Fail!", cszName));
+        return NULL;
+    }
+
+    DWORD dwRc = piManager->InsertObject(piObject);
+    if (dwRc != SUCCESS)
+    {
+        CHECK_RETCODE(dwRc, STR_FORMAT("Insert Object: '%s'|%d Fail(0x%x)!", 
+                        piObject->Name(), piObject->ID(), dwRc));
+        DCOP_RELEASE_INSTANCE_REFER(piManager, piObject);
+        return NULL;
+    }
+
+    return piObject;
+}
+
+/*******************************************************
+  函 数 名: CFrameKernel::DynamicLoad
+  描    述: 加载动态库
+  输    入: 
+  输    出: 
+  返    回: 
+  修改记录: 
+ *******************************************************/
+objDynamicLoader *CFrameKernel::DynamicLoad(const char *dllFile)
+{
+    objDynamicLoader *pLoader = DCOP_CreateDynamicLoader();
+    if (!pLoader)
+    {
+        return 0;
+    }
+
+    DWORD dwRc = pLoader->Load(dllFile);
+    if (dwRc != SUCCESS)
+    {
+        delete pLoader;
+        return 0;
+    }
+
+    return pLoader;
+}
+
+/*******************************************************
+  函 数 名: CFrameKernel::AddRefer
+  描    述: 添加引用
+  输    入: 
+  输    出: 
+  返    回: 
+  修改记录: 
+ *******************************************************/
+DWORD CFrameKernel::AddRefer(Instance *piThis, Instance *piRefer, objDynamicLoader *pLoader)
+{
+    if (!piThis)
+    {
+        return FAILURE;
+    }
+
+    AutoObjLock(this);
+
+    IT_REFERS it = m_refers.find(piThis);
+    if (it == m_refers.end())
+    {
+        CReferNode refNode;
+        it = m_refers.insert(m_refers.end(), MAP_REFERS::value_type(piThis, refNode));
+        if (it == m_refers.end())
+        {
+            return FAILURE;
+        }
+    }
+
+    if (pLoader)
+    {
+        ((*it).second).SetLoader(pLoader);
+    }
+    else
+    {
+        ((*it).second).OnReferto(piRefer);
+    }
+
+    return SUCCESS;
+}
+
+/*******************************************************
+  函 数 名: CFrameKernel::DelRefer
+  描    述: 删除引用
+  输    入: 
+  输    出: 
+  返    回: 
+  修改记录: 
+ *******************************************************/
+DWORD CFrameKernel::DelRefer(Instance *piThis, Instance *piRefer)
+{
+    if (!piThis)
+    {
+        return FAILURE;
+    }
+
+    AutoObjLock(this);
+
+    IT_REFERS it = m_refers.find(piThis);
+    if (it == m_refers.end())
+    {
+        return FAILURE;
+    }
+
+    ((*it).second).OnReferto(piRefer);
+
+    return SUCCESS;
 }
 
 /*******************************************************
@@ -428,6 +551,7 @@ DWORD CFrameKernel::CreateAllObjects(IManager *piManager, const XMLElement *pXML
     DWORD dwRc = SUCCESS;
     while (pXmlObject)
     {
+        /// 获取配置参数
         CDArray szArgs(DCOP_STRING_ARG_LEM_MAX, DCOP_OBJECT_ARG_MAX_COUNT);
         char *argv[DCOP_OBJECT_ARG_MAX_COUNT];
         DWORD argc = 0;
@@ -435,30 +559,36 @@ DWORD CFrameKernel::CreateAllObjects(IManager *piManager, const XMLElement *pXML
         argc += GetXmlChildValue(pXmlObject, szArgs);
         GetArgList(argc, argv, szArgs);
 
-        const char *szName = pXmlObject->Attribute("ins");
-        if (!szName) szName = pXmlObject->Attribute("name");
-        IObject *piObject = 0;
-        DCOP_CREATE_INSTANCE(IObject, szName, piManager, argc, argv, piObject);
-        if (!piObject)
+        /// 如果是动态库，则先进行动态加载
+        objDynamicLoader *pLoader = 0;
+        const char *dllFile = pXmlObject->Attribute("dll");
+        if (dllFile)
         {
-            dwRc = FAILURE;
-            CHECK_RETCODE(dwRc, STR_FORMAT("Create Object: '%s'|%s Fail(0x%x)!", 
-                    szName, pXmlObject->Attribute("id"), dwRc));
-            pXmlObject = pXmlObject->NextSiblingElement();
-            continue;
+            pLoader = CFrameKernel::DynamicLoad(dllFile);
         }
 
-        DWORD dwRcTmp = piManager->InsertObject(piObject);
-        if (dwRcTmp != SUCCESS)
+        /// 加载单个对象
+        const char *cszName = pXmlObject->Attribute("inst");
+        if (!cszName) cszName = pXmlObject->Attribute("name");
+        IObject *piObject = Load(cszName, piManager, argc, argv);
+        if (!piObject)
         {
-            CHECK_RETCODE(dwRcTmp, STR_FORMAT("Insert Object: '%s'|%d Fail(0x%x)!", 
-                    piObject->Name(), piObject->ID(), dwRcTmp));
-            DCOP_RELEASE_INSTANCE_REFER(piManager, piObject);
-            dwRc |= dwRcTmp;
-            pXmlObject = pXmlObject->NextSiblingElement();
-            continue;
+            delete pLoader;
+            pLoader = 0;
+            dwRc |= FAILURE;
         }
-    
+
+        /// 添加动态加载句柄
+        if (pLoader)
+        {
+            if (AddRefer(piObject, 0, pLoader) != SUCCESS)
+            {
+                delete pLoader;
+                pLoader = 0;
+            }
+        }
+
+        /// 到下一个配置元素
         pXmlObject = pXmlObject->NextSiblingElement();
     }
 

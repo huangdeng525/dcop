@@ -131,5 +131,33 @@ public:
 };
 
 
+/// -------------------------------------------------
+/// 创建动态加载对象
+/// -------------------------------------------------
+#define DCOP_CreateDynamicLoader() \
+    objDynamicLoader::CreateInstance(__FILE__, __LINE__)
+
+/// -------------------------------------------------
+/// 动态加载
+/// -------------------------------------------------
+class objDynamicLoader
+{
+public:
+    static objDynamicLoader *CreateInstance(const char *file,
+                        int line);
+    virtual ~objDynamicLoader() = 0;
+
+    /// 加载和卸载
+    virtual DWORD Load(const char *dllFile) = 0;
+    virtual DWORD Unload() = 0;
+
+    /// 查找符号
+    virtual void *FindSymbol(const char *symName) = 0;
+
+    /// 设置错误信息回调
+    virtual void SetErrLog(LOG_PRINT logPrint, LOG_PARA logPara) = 0;
+};
+
+
 #endif // #ifndef _TASK_H_
 

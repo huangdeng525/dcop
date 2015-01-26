@@ -11,6 +11,11 @@
 #include <stdio.h>
 #include <ctype.h>
 
+#if DCOP_OS == DCOP_OS_WINDOWS
+#elif DCOP_OS == DCOP_OS_LINUX
+#include <signal.h>
+#endif
+
 
 /// -------------------------------------------------
 /// 跟踪信息开关
@@ -45,6 +50,11 @@ static CLog *sg_pCheckLog = 0;                      // 检查日志
  *******************************************************/
 void DebugLogStatus(int status)
 {
+    if (status)
+    {
+        SetSysErrHandler();
+    }
+
     g_debug_switch = status;
 }
 
@@ -347,6 +357,47 @@ void CheckErrCodeEx(int rc, int expect, const char *info, const char *file, int 
         printf("%s\r\n", szStr);
     }
     DCOP_Reset(-1, file, line);
+}
+
+/*******************************************************
+  函 数 名: HandleSysErrLog
+  描    述: 处理系统错误记录
+  输    入: 
+  输    出: 
+  返    回: 
+  修改记录: 
+ *******************************************************/
+void HandleSysErrLog(int error)
+{
+#if DCOP_OS == DCOP_OS_WINDOWS
+#elif DCOP_OS == DCOP_OS_LINUX
+
+    signal(error, SIG_DFL); // 还原默认的信号处理handler
+
+#endif
+
+    PrintLog(STR_FORMAT("!!! System Error(%d) !!!", error), CLog::PrintCallBack, sg_pErrLog);
+    ShowCallStack(CLog::PrintCallBack, sg_pErrLog, 0);
+}
+
+/*******************************************************
+  函 数 名: SetSysErrHandler
+  描    述: 设置系统错误处理
+  输    入: 
+  输    出: 
+  返    回: 
+  修改记录: 
+ *******************************************************/
+void SetSysErrHandler()
+{
+#if DCOP_OS == DCOP_OS_WINDOWS
+#elif DCOP_OS == DCOP_OS_LINUX
+
+    /// 设置信号的处理函数
+    signal(SIGSEGV, HandleSysErrLog); // SIGSEGV    11       Core Invalid memory reference
+    signal(SIGABRT, HandleSysErrLog); // SIGABRT     6       Core Abort signal from
+
+#endif
 }
 
 
