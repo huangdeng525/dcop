@@ -26,6 +26,7 @@ void *          g_onInstanceReleasePara = 0;
 void          (*g_onInstanceGetRef)(
                         Instance *piThis, 
                         Instance ***pppiRefers, 
+                        DWORD *pdwReferCount, 
                         void *pPara) = 0;
 void *          g_onInstanceGetRefPara = 0;
 

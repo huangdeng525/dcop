@@ -165,7 +165,8 @@ interface Instance : public objBase
 
     /// 查询引用
     virtual DWORD GetRef(
-                        Instance ***pppirs = 0      // 输出引用实例列表
+                        Instance ***pppirs = 0,     // 输出引用实例列表
+                        DWORD *count = 0            // 输出引用实例个数
                         ) = 0;
 };
 
@@ -177,7 +178,7 @@ interface Instance : public objBase
 public:                                             \
     Instance *m_piParent;                           \
     objAtomic::T m_refCount;                        \
-    DWORD GetRef(Instance ***pppirs = 0);           \
+    DWORD GetRef(Instance ***pppirs = 0, DWORD *count = 0); \
     DWORD Release(Instance *pir = 0);               \
     DWORD QueryInterface(const IntfNameVer& iid, void **ppv = 0, Instance *pir = 0)
 
@@ -222,12 +223,13 @@ extern void * g_onInstanceReleasePara;              \
 extern void (*g_onInstanceGetRef)(                  \
                     Instance *piThis,               \
                     Instance ***pppiRefers,         \
+                    DWORD *pdwReferCount,           \
                     void *pPara);                   \
 extern void * g_onInstanceGetRefPara;               \
-DWORD CMyClass::GetRef(Instance ***pppirs)          \
+DWORD CMyClass::GetRef(Instance ***pppirs, DWORD *count) \
 {                                                   \
-    if (g_onInstanceGetRef && pppirs)               \
-        g_onInstanceGetRef(this, pppirs,            \
+    if (g_onInstanceGetRef && pppirs && count)      \
+        g_onInstanceGetRef(this, pppirs, count,     \
         g_onInstanceGetRefPara);                    \
     return (DWORD)m_refCount;                       \
 }                                                   \
