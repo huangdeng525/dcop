@@ -231,8 +231,8 @@ void osBase::Dump(LOG_PRINT logPrint, LOG_PARA logPara, int argc, void **argv)
 
     objTask *pTask = objTask::Current();
     PrintLog(STR_FORMAT("Current Task: '%s'(%d)", 
-                        (pTask)? pTask->GetName() : "Null", 
-                        (pTask)? pTask->GetID() : 0), 
+                        (pTask)? pTask->Name() : "Null", 
+                        (pTask)? pTask->ID() : 0), 
                         PrintToConsole, 0);
     ShowCallStack(0, 0, 0);
 
