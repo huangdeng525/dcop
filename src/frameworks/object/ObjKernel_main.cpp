@@ -32,6 +32,102 @@ void *          g_onInstanceGetRefPara = 0;
 
 
 /*******************************************************
+  函 数 名: CFrameKernel::CReferNode::OnReferto
+  描    述: 被引用时
+  输    入: 
+  输    出: 
+  返    回: 
+  修改记录: 
+ *******************************************************/
+void CFrameKernel::CReferNode::OnReferto(Instance *refer)
+{
+    IT_COUNT it = m_count.find(refer);
+    if (it != m_count.end())
+    {
+        ((*it).second)++;
+        return;
+    }
+
+    it = m_count.insert(m_count.end(), MAP_COUNT::value_type(refer, 1));
+    if (it == m_count.end())
+    {
+        return;
+    }
+
+    /// 走到这里，表示是新添加了引用，则重新整理数组
+    m_refer.Clear();
+    if (!m_count.size())
+    {
+        return;
+    }
+
+    for (it = m_count.begin(); it != m_count.end(); ++it)
+    {
+        (void)m_refer.Append((void *)&((*it).first));
+    }
+}
+
+/*******************************************************
+  函 数 名: CFrameKernel::CReferNode::OnRelease
+  描    述: 被释放时
+  输    入: 
+  输    出: 
+  返    回: 
+  修改记录: 
+ *******************************************************/
+void CFrameKernel::CReferNode::OnRelease(Instance *refer)
+{
+    IT_COUNT it = m_count.find(refer);
+    if (it == m_count.end())
+    {
+        return;
+    }
+
+    if ((*it).second)
+    {
+        ((*it).second)--;
+    }
+
+    if ((*it).second)
+    {
+        return;
+    }
+
+    (void)m_count.erase(it);
+
+    /// 走到这里，表示是新删除了引用，则重新整理数组
+    m_refer.Clear();
+    if (!m_count.size())
+    {
+        return;
+    }
+
+    for (it = m_count.begin(); it != m_count.end(); ++it)
+    {
+        (void)m_refer.Append((void *)&((*it).first));
+    }
+}
+
+/*******************************************************
+  函 数 名: CFrameKernel::CReferNode::OnGetRefer
+  描    述: 获取引用时
+  输    入: 
+  输    出: 
+  返    回: 
+  修改记录: 
+ *******************************************************/
+void CFrameKernel::CReferNode::OnGetRefer(Instance ***refers, DWORD *count)
+{
+    if (!refers || !count)
+    {
+        return;
+    }
+
+    *refers = (Instance **)m_refer.Get();
+    *count  = m_refer.Count();
+}
+
+/*******************************************************
   函 数 名: objBase::GetInstance
   描    述: 获取内核实例
   输    入: 
@@ -68,6 +164,13 @@ CFrameKernel::CFrameKernel()
 {
     m_pLock = DCOP_CreateLock();
     m_pTask = 0;
+
+    g_onInstanceQueryInterface          = OnInstanceQueryInterface;
+    g_onInstanceQueryInterfacePara      = this;
+    g_onInstanceRelease                 = OnInstanceRelease;
+    g_onInstanceReleasePara             = this;
+    g_onInstanceGetRef                  = OnInstanceGetRef;
+    g_onInstanceGetRefPara              = this;
 }
 
 /*******************************************************
@@ -126,6 +229,54 @@ void CFrameKernel::Leave()
 }
 
 /*******************************************************
+  函 数 名: CFrameKernel::Dump
+  描    述: Dump
+  输    入: 
+  输    出: 
+  返    回: 
+  修改记录: 
+ *******************************************************/
+void CFrameKernel::Dump(LOG_PRINT logPrint, LOG_PARA logPara, int argc, void **argv)
+{
+    if (!logPrint) return;
+
+    AutoObjLock(this);
+
+    for (IT_REFERS it = m_refers.begin(); it != m_refers.end(); ++it)
+    {
+        Instance *piThis = ((*it).first);
+        if (!piThis)
+        {
+            continue;
+        }
+
+        logPrint(STR_FORMAT("'%s'(id:%d)[inst:%p] Be Refered(count:%d) By: \r\n", 
+                        piThis->Name(), piThis->ID(), piThis, piThis->GetRef()), logPara);
+
+        Instance **ppiRefers = 0;
+        DWORD dwReferCount = 0;
+        ((*it).second).OnGetRefer(&ppiRefers, &dwReferCount);
+        if (!ppiRefers || !dwReferCount)
+        {
+            logPrint("    No Refered! \r\n", logPara);
+            continue;
+        }
+
+        for (DWORD i = 0; i < dwReferCount; ++i)
+        {
+            Instance *piRefer = ppiRefers[i];
+            if (!piRefer)
+            {
+                continue;
+            }
+
+            logPrint(STR_FORMAT("    '%s'(id:%d)[inst:%p] \r\n", 
+                        piRefer->Name(), piRefer->ID(), piRefer), logPara);
+        }
+    }
+}
+
+/*******************************************************
   函 数 名: CFrameKernel::Start
   描    述: 整个应用实例的入口
   输    入: cfgDeploy   - 输入的部署配置文件
@@ -160,7 +311,7 @@ objBase *CFrameKernel::Start(const char *cfgDeploy)
 
     TRACE_LOG(STR_FORMAT("System(%d) InitAllObjects OK!", piManager->GetSystemID()));
     piManager->Dump(PrintToConsole, 0, 0, 0);
-
+    Dump(PrintToConsole, 0, 0, 0);
     osBase::Dump(PrintToConsole, 0, 0, 0);
 
     return piManager;
@@ -384,7 +535,41 @@ DWORD CFrameKernel::DelRefer(Instance *piThis, Instance *piRefer)
 
     ((*it).second).OnReferto(piRefer);
 
+    if (!piThis->GetRef())
+    {
+        (void)m_refers.erase(it);
+    }
+
     return SUCCESS;
+}
+
+/*******************************************************
+  函 数 名: CFrameKernel::GetRefer
+  描    述: 获取引用
+  输    入: 
+  输    出: 
+  返    回: 
+  修改记录: 
+ *******************************************************/
+DWORD CFrameKernel::GetRefer(Instance *piThis, Instance ***pppiRefers)
+{
+    if (!piThis)
+    {
+        return 0;
+    }
+
+    AutoObjLock(this);
+
+    IT_REFERS it = m_refers.find(piThis);
+    if (it == m_refers.end())
+    {
+        return 0;
+    }
+
+    DWORD dwCount = 0;
+    ((*it).second).OnGetRefer(pppiRefers, &dwCount);
+
+    return dwCount;
 }
 
 /*******************************************************
@@ -594,5 +779,76 @@ DWORD CFrameKernel::CreateAllObjects(IManager *piManager, const XMLElement *pXML
     }
 
     return dwRc;
+}
+
+/*******************************************************
+  函 数 名: CFrameKernel::OnInstanceQueryInterface
+  描    述: 引用时
+  输    入: 
+  输    出: 
+  返    回: 
+  修改记录: 
+ *******************************************************/
+void CFrameKernel::OnInstanceQueryInterface(
+                        Instance *piThis, 
+                        Instance *piRefer, 
+                        void *pPara)
+{
+    CFrameKernel *pKernel = (CFrameKernel *)pPara;
+    if (!pKernel)
+    {
+        return;
+    }
+
+    (void)pKernel->AddRefer(piThis, piRefer);
+}
+
+/*******************************************************
+  函 数 名: CFrameKernel::OnInstanceRelease
+  描    述: 释放引用时
+  输    入: 
+  输    出: 
+  返    回: 
+  修改记录: 
+ *******************************************************/
+void CFrameKernel::OnInstanceRelease(
+                    Instance *piThis, 
+                    Instance *piRefer, 
+                    void *pPara)
+{
+    CFrameKernel *pKernel = (CFrameKernel *)pPara;
+    if (!pKernel)
+    {
+        return;
+    }
+
+    (void)pKernel->DelRefer(piThis, piRefer);
+}
+
+/*******************************************************
+  函 数 名: CFrameKernel::OnInstanceGetRef
+  描    述: 获取引用时
+  输    入: 
+  输    出: 
+  返    回: 
+  修改记录: 
+ *******************************************************/
+void CFrameKernel::OnInstanceGetRef(
+                    Instance *piThis, 
+                    Instance ***pppiRefers, 
+                    DWORD *pdwReferCount, 
+                    void *pPara)
+{
+    CFrameKernel *pKernel = (CFrameKernel *)pPara;
+    if (!pKernel)
+    {
+        return;
+    }
+
+    DWORD dwReferCount = pKernel->GetRefer(piThis, pppiRefers);
+    if (pdwReferCount)
+    {
+        *pdwReferCount = dwReferCount;
+    }
 }
 
