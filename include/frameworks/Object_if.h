@@ -95,12 +95,6 @@ interface IObject : public Instance
     virtual const char *Class() = 0;
     virtual DWORD Size() = 0;
 
-    /// 对象信息: 名字和ID
-    ///     Name: 只是用来标识对象类别(一般和给类厂是同一个名字)
-    ///     ID  : 用来全局唯一索引一个对象
-    virtual const char *Name() = 0;
-    virtual DWORD ID() = 0;
-
     /// 获取是否'线程安全'和'消息并发'
     ///     线程安全: 同步创建互斥信号量，防止对象入口被重入，如果关闭'线程安全'，则无需配置'消息并发'(因为无锁保护)
     ///     消息并发: 对消息入口不进行保护，'Proc(msg)'可被多个线程重入，因此在消息处理中间访问对象其他入口需要锁保护

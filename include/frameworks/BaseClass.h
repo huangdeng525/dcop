@@ -79,6 +79,12 @@ public:
     /// 所有基类均为虚析构
     virtual ~objBase() = 0;
 
+    /// 对象信息: 名字和ID
+    ///     Name: 只是用来标识实例类别
+    ///     ID  : 用来唯一索引一个实例
+    virtual const char *Name() {return 0;}
+    virtual DWORD ID() {return 0;}
+
     /// 进入和离开的互斥保护
     ///     互斥保护: 由实例实现者自己来对入口进行保护(默认为空实现)
     ///     使用方法: 可在入口函数开始使用AutoObjLock(this)来简化操作
