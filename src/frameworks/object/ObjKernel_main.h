@@ -44,6 +44,11 @@ public:
     class CReferNode
     {
     public:
+        /// 计数MAP
+        typedef std::map<Instance *, DWORD> MAP_COUNT;
+        typedef MAP_COUNT::iterator IT_COUNT;
+
+    public:
         CReferNode() : m_refer(sizeof(Instance *)) {m_loader = 0;}
         ~CReferNode()
         {
@@ -56,12 +61,14 @@ public:
 
         void SetLoader(objDynamicLoader *loader) {m_loader = loader;}
 
-        void OnReferto(Instance *refer) {}
-        void OnRelease(Instance *refer) {}
+        void OnReferto(Instance *refer);
+        void OnRelease(Instance *refer);
+        void OnGetRefer(Instance ***refers, DWORD *count);
 
     private:
         objDynamicLoader *m_loader;
         CDArray m_refer;
+        MAP_COUNT m_count;
     };
 
     /// 引用MAP
@@ -77,6 +84,8 @@ public:
     void Enter();
     void Leave();
 
+    void Dump(LOG_PRINT logPrint, LOG_PARA logPara, int argc, void **argv);
+
     objBase *Start(const char *cfgDeploy);
     void End(objBase *pBase);
 
@@ -86,6 +95,20 @@ public:
     objDynamicLoader *DynamicLoad(const char *dllFile);
     DWORD AddRefer(Instance *piThis, Instance *piRefer, objDynamicLoader *pLoader = 0);
     DWORD DelRefer(Instance *piThis, Instance *piRefer);
+    DWORD GetRefer(Instance *piThis, Instance ***pppiRefers);
+    static void OnInstanceQueryInterface(
+                        Instance *piThis, 
+                        Instance *piRefer, 
+                        void *pPara);
+    static void OnInstanceRelease(
+                        Instance *piThis, 
+                        Instance *piRefer, 
+                        void *pPara);
+    static void OnInstanceGetRef(
+                        Instance *piThis, 
+                        Instance ***pppiRefers, 
+                        DWORD *pdwReferCount, 
+                        void *pPara);
 
 private:
     DWORD GetXmlAttribute(const XMLElement *pXMLElement, CDArray &rArgs);

@@ -155,8 +155,8 @@ void CMemTrack::AddTrack(void *address, size_t size, const char *file, int line)
                         size,
                         file,
                         line,
-                        (pTask)? pTask->GetName() : "Null",
-                        (pTask)? pTask->GetID() : 0));
+                        (pTask)? pTask->Name() : "Null",
+                        (pTask)? pTask->ID() : 0));
     }
 
     MEM_INFO info;
@@ -228,8 +228,8 @@ void CMemTrack::RemoveTrack(void *address, const char *file, int line)
                         address,
                         file,
                         line,
-                        (pTask)? pTask->GetName() : "Null",
-                        (pTask)? pTask->GetID() : 0));
+                        (pTask)? pTask->Name() : "Null",
+                        (pTask)? pTask->ID() : 0));
     }
 
     /// ´ÓÉêÇëÈİÆ÷ÖĞ²éÕÒ¼ÇÂ¼
@@ -315,7 +315,7 @@ void CMemTrack::SetRecordDetail(bool enable, bool only_cur_task, const char *onl
     if (only_cur_task)
     {
         objTask *pTask = objTask::Current();
-        if (pTask) m_cur_task_id = pTask->GetID();
+        if (pTask) m_cur_task_id = pTask->ID();
         else m_cur_task_id = 0;
     }
     else
@@ -350,7 +350,7 @@ bool CMemTrack::GetRecordDetail(const char *file)
     }
 
     objTask *pTask = objTask::Current();
-    if (m_cur_task_id && pTask && (pTask->GetID() != m_cur_task_id))
+    if (m_cur_task_id && pTask && (pTask->ID() != m_cur_task_id))
     {
         return false;
     }

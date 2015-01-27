@@ -50,8 +50,8 @@ public:
                         int line);
     virtual ~objTask() = 0;
 
-    virtual const char *GetName() = 0;
-    virtual DWORD GetID() = 0;
+    virtual const char *Name() = 0;
+    virtual DWORD ID() = 0;
 
     static void Delay(DWORD delayMilliseconds);
     static objTask *Current();

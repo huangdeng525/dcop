@@ -25,8 +25,8 @@ public:
 
     DWORD Destroy();
 
-    const char *GetName() {return osBase::cszGetName();}
-    DWORD GetID() {return osBase::dwGetID();}
+    const char *Name() {return osBase::cszGetName();}
+    DWORD ID() {return osBase::dwGetID();}
 
     void SetName(const char *cszName) {osBase::vSetName(cszName);}
     void SetID(DWORD dwID) {osBase::vSetID(dwID);}

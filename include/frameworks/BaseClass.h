@@ -79,6 +79,12 @@ public:
     /// 所有基类均为虚析构
     virtual ~objBase() = 0;
 
+    /// 对象信息: 名字和ID
+    ///     Name: 只是用来标识实例类别
+    ///     ID  : 用来唯一索引一个实例
+    virtual const char *Name() {return 0;}
+    virtual DWORD ID() {return 0;}
+
     /// 进入和离开的互斥保护
     ///     互斥保护: 由实例实现者自己来对入口进行保护(默认为空实现)
     ///     使用方法: 可在入口函数开始使用AutoObjLock(this)来简化操作
@@ -165,7 +171,8 @@ interface Instance : public objBase
 
     /// 查询引用
     virtual DWORD GetRef(
-                        Instance ***pppirs = 0      // 输出引用实例列表
+                        Instance ***pppirs = 0,     // 输出引用实例列表
+                        DWORD *count = 0            // 输出引用实例个数
                         ) = 0;
 };
 
@@ -177,7 +184,7 @@ interface Instance : public objBase
 public:                                             \
     Instance *m_piParent;                           \
     objAtomic::T m_refCount;                        \
-    DWORD GetRef(Instance ***pppirs = 0);           \
+    DWORD GetRef(Instance ***pppirs = 0, DWORD *count = 0); \
     DWORD Release(Instance *pir = 0);               \
     DWORD QueryInterface(const IntfNameVer& iid, void **ppv = 0, Instance *pir = 0)
 
@@ -222,12 +229,13 @@ extern void * g_onInstanceReleasePara;              \
 extern void (*g_onInstanceGetRef)(                  \
                     Instance *piThis,               \
                     Instance ***pppiRefers,         \
+                    DWORD *pdwReferCount,           \
                     void *pPara);                   \
 extern void * g_onInstanceGetRefPara;               \
-DWORD CMyClass::GetRef(Instance ***pppirs)          \
+DWORD CMyClass::GetRef(Instance ***pppirs, DWORD *count) \
 {                                                   \
-    if (g_onInstanceGetRef && pppirs)               \
-        g_onInstanceGetRef(this, pppirs,            \
+    if (g_onInstanceGetRef && pppirs && count)      \
+        g_onInstanceGetRef(this, pppirs, count,     \
         g_onInstanceGetRefPara);                    \
     return (DWORD)m_refCount;                       \
 }                                                   \
