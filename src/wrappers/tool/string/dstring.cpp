@@ -104,13 +104,13 @@ void CDString::Clear()
   返    回: 
   修改记录: 
  *******************************************************/
-void CDString::Split(const char *chrList, CDArray &strList)
+void CDString::Split(const char *chrList, CDArray &strList, bool bNeedSplitChar)
 {
     char *pszStr = Copy(m_pBuffer);
     if (!pszStr) return;
 
     strList.Clear();
-    strList.SetNodeSize(sizeof(CDString) + sizeof(char));
+    strList.SetNodeSize(sizeof(CDString) + ((bNeedSplitChar)? sizeof(char) : 0));
     strList.SetNodeDelete(StrListFreeHead);
 
     while (*pszStr)
@@ -133,7 +133,7 @@ void CDString::Split(const char *chrList, CDArray &strList)
         }
 
         /// 把分割的字符写入到数组中
-        *(char *)(pNode + 1) = *pSplitPos;
+        if (bNeedSplitChar) *(char *)(pNode + 1) = *pSplitPos;
         *pSplitPos = '\0';
         pszStr = pSplitPos + 1;
     }

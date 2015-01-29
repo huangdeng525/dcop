@@ -87,7 +87,7 @@ public:
     void Clear();
 
     /// ·Ö¸î×Ö·û´®
-    void Split(const char *chrList, CDArray &strList);
+    void Split(const char *chrList, CDArray &strList, bool bNeedSplitChar = true);
 
     /// ²Ã¼ô
     void Trim(const char *chrList);
