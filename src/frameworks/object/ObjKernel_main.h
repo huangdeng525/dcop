@@ -49,7 +49,7 @@ public:
         typedef MAP_COUNT::iterator IT_COUNT;
 
     public:
-        CReferNode() : m_refer(sizeof(Instance *)), m_refercnt(sizeof(DWORD)) {m_loader = 0;}
+        CReferNode() : m_refer(sizeof(Instance *)), m_refcnt(sizeof(DWORD)) {m_loader = 0;}
         ~CReferNode()
         {
             if (m_loader)
@@ -69,7 +69,7 @@ public:
     private:
         objDynamicLoader *m_loader;
         CDArray m_refer;
-        CDArray m_refercnt;
+        CDArray m_refcnt;
         MAP_COUNT m_count;
     };
 

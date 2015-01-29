@@ -56,18 +56,18 @@ void CFrameKernel::CReferNode::OnReferto(Instance *refer)
 
     /// 走到这里，表示是新添加了引用，则重新整理数组
     m_refer.Clear();
-    m_refercnt.Clear();
+    m_refcnt.Clear();
     if (!m_count.size())
     {
         return;
     }
 
     (void)m_refer.Set(m_count.size() - 1, 0);
-    (void)m_refercnt.Set(m_count.size() - 1, 0);
+    (void)m_refcnt.Set(m_count.size() - 1, 0);
     for (it = m_count.begin(); it != m_count.end(); ++it)
     {
         (void)m_refer.Append((void *)&((*it).first));
-        (void)m_refercnt.Append((void *)&((*it).second));
+        (void)m_refcnt.Append((void *)&((*it).second));
     }
 }
 
@@ -101,18 +101,18 @@ void CFrameKernel::CReferNode::OnRelease(Instance *refer)
 
     /// 走到这里，表示是新删除了引用，则重新整理数组
     m_refer.Clear();
-    m_refercnt.Clear();
+    m_refcnt.Clear();
     if (!m_count.size())
     {
         return;
     }
 
     (void)m_refer.Set(m_count.size() - 1, 0);
-    (void)m_refercnt.Set(m_count.size() - 1, 0);
+    (void)m_refcnt.Set(m_count.size() - 1, 0);
     for (it = m_count.begin(); it != m_count.end(); ++it)
     {
         (void)m_refer.Append((void *)&((*it).first));
-        (void)m_refercnt.Append((void *)&((*it).second));
+        (void)m_refcnt.Append((void *)&((*it).second));
     }
 }
 
@@ -150,8 +150,8 @@ void CFrameKernel::CReferNode::OnGetReferCount(DWORD **refercount, DWORD *count)
         return;
     }
 
-    *refercount = (DWORD *)m_refercnt.Get();
-    *count      = m_refercnt.Count();
+    *refercount = (DWORD *)m_refcnt.Get();
+    *count      = m_refcnt.Count();
 }
 
 /*******************************************************
@@ -313,6 +313,8 @@ void CFrameKernel::Dump(LOG_PRINT logPrint, LOG_PARA logPara, int argc, void **a
                         (i < dwCounterCount)? pdwReferCount[i] : 0), logPara);
         }
     }
+
+    osBase::Dump(logPrint, logPara, argc, argv);
 }
 
 /*******************************************************
@@ -351,7 +353,6 @@ objBase *CFrameKernel::Start(const char *cfgDeploy)
     TRACE_LOG(STR_FORMAT("System(%d) InitAllObjects OK!", piManager->GetSystemID()));
     piManager->Dump(PrintToConsole, 0, 0, 0);
     Dump(PrintToConsole, 0, 0, 0);
-    osBase::Dump(PrintToConsole, 0, 0, 0);
 
     return piManager;
 }
