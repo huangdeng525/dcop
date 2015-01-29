@@ -11,6 +11,7 @@
 #include "ObjDispatch_if.h"
 #include "ObjAttribute_if.h"
 #include "ObjSchedule_if.h"
+#include "cfg/argcfg.h"
 
 
 class CDispatch : public IDispatch
@@ -34,17 +35,10 @@ public:
 
     DWORD SendAndWait(objMsg *request, objMsg **response, DWORD waittime);
 
+    void Hook(objMsg *message);
+
     DECLARE_ATTRIBUTE_INDEX(StackLayer);
     DECLARE_ATTRIBUTE(IObject*, pInfLayer);                     // 接口层 : 使用调度对象
-
-    /// 打开消息监控开关
-    void OpenMsgHook();
-
-    /// 关闭消息监控开关
-    void CloseMsgHook();
-
-    /// 获取消息监控开关状态
-    DWORD GetMsgHookFlag();
 
     /// 分布式协议栈对外接口
     static DWORD StackRecvMsg(
@@ -55,8 +49,14 @@ public:
                     );
 
 private:
-    DWORD m_dwMsgHookFlag;              // 消息监控标识
-
+    CArgCfgTable m_cfgTable;
+    DECLARE_CONFIG_ITEM(DWORD, hookFlag);
+    DECLARE_CONFIG_ITEM(DWORD, lenMax);
+    DECLARE_CONFIG_ITEM(DWORD, srcID);
+    DECLARE_CONFIG_ITEM(DWORD, dstID);
+    DECLARE_CONFIG_ITEM(DWORD, logParaLen);
+    LOG_PRINT m_logPrint;
+    LOG_PARA  m_logPara;
 };
 
 
