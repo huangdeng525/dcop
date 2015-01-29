@@ -30,8 +30,7 @@ INTF_VER(IDispatch, 1, 0, 0);
 interface IDispatch : public IObject
 {
     /// 获取MTU大小
-    virtual DWORD GetMTU(
-                        ) = 0;
+    virtual DWORD GetMTU() = 0;
 
     /// 异步非阻塞发送消息(不保证对端是否收到)
     virtual DWORD Send(objMsg *message) = 0;
