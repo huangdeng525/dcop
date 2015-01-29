@@ -34,6 +34,15 @@ DCOP_IMPLEMENT_IOBJECT(CDispatch)
     DCOP_IMPLEMENT_CONFIG_THREADSAFE("threadsafe")
 DCOP_IMPLEMENT_IOBJECT_END
 
+/// -------------------------------------------------
+/// 实现配置项
+/// -------------------------------------------------
+IMPLEMENT_CONFIG_ITEM(CDispatch, hookFlag, "k", "hookflag", "Msg Hook Flag", CArgCfgType::TYPE_VALUE, false)
+IMPLEMENT_CONFIG_ITEM(CDispatch, lenMax, "l", "lenmax", "Output Len Max", CArgCfgType::TYPE_VALUE, false)
+IMPLEMENT_CONFIG_ITEM(CDispatch, srcID, "s", "srcid", "Msg Src ID", CArgCfgType::TYPE_VALUE, false)
+IMPLEMENT_CONFIG_ITEM(CDispatch, dstID, "d", "dstid", "Msg Dst ID", CArgCfgType::TYPE_VALUE, false)
+IMPLEMENT_CONFIG_ITEM(CDispatch, logParaLen, "lpl", "logparalen", "Log Para Len", CArgCfgType::TYPE_VALUE, false)
+
 
 /*******************************************************
   函 数 名: CDispatch::CDispatch
@@ -48,7 +57,16 @@ CDispatch::CDispatch(Instance *piParent, int argc, char **argv)
     DCOP_CONSTRUCT_INSTANCE(piParent);
     DCOP_CONSTRUCT_IOBJECT(argc, argv);
 
-    m_dwMsgHookFlag = DCOP_CLOSE;
+    INIT_CONFIG_START(m_cfgTable)
+        INIT_CONFIG_ITEM_VAL(hookFlag, DCOP_CLOSE)
+        INIT_CONFIG_ITEM_VAL(lenMax, 0)
+        INIT_CONFIG_ITEM_VAL(srcID, 0)
+        INIT_CONFIG_ITEM_VAL(dstID, 0)
+        INIT_CONFIG_ITEM_VAL(logParaLen, 0)
+    INIT_CONFIG_END
+
+    m_logPrint = 0;
+    m_logPara = 0;
 }
 
 /*******************************************************
@@ -63,6 +81,14 @@ CDispatch::~CDispatch()
 {
     DCOP_DESTRUCT_IOBJECT();
     DCOP_DESTRUCT_INSTANCE();
+
+    if (m_logPara)
+    {
+        DCOP_Free(m_logPara);
+        m_logPara = 0;
+    }
+
+    m_logParaLen = 0;
 }
 
 /*******************************************************
@@ -116,6 +142,38 @@ void CDispatch::Fini()
  *******************************************************/
 void CDispatch::Dump(LOG_PRINT logPrint, LOG_PARA logPara, int argc, void **argv)
 {
+    AutoObjLock(this);
+
+    if (m_logPara)
+    {
+        DCOP_Free(m_logPara);
+        m_logPara = 0;
+    }
+
+    m_logParaLen = 0;
+
+    m_cfgTable.Cfg(argc, (char **)argv);
+    m_logPrint = logPrint;
+    if (!m_logPrint)
+    {
+        return;
+    }
+
+    if (!m_logParaLen)
+    {
+        return;
+    }
+
+    m_logPara = (LOG_PARA)DCOP_Malloc(m_logParaLen);
+    if (!m_logPara)
+    {
+        return;
+    }
+
+    (void)memcpy(m_logPara, logPara, m_logParaLen);
+
+    m_logPrint(STR_FORMAT("  Hook Flag: %d;\r\n  Len Max: %d;\r\n  Src ID: %d;\r\n  Dst ID: %d!\r\n", 
+                        (DWORD)m_hookFlag, (DWORD)m_lenMax, (DWORD)m_srcID, (DWORD)m_dstID), logPara);
 }
 
 /*******************************************************
@@ -150,6 +208,11 @@ DWORD CDispatch::Send(objMsg *message)
         return FAILURE;
     }
 
+    if (m_hookFlag && m_logPrint)
+    {
+        Hook(message);
+    }
+
     return pSchedule->Join(message);
 }
 
@@ -169,48 +232,49 @@ DWORD CDispatch::SendAndWait(objMsg *request, objMsg **response, DWORD waittime)
 }
 
 /*******************************************************
-  函 数 名: CDispatch::OpenMsgHook
-  描    述: 打开消息钩子
+  函 数 名: CDispatch::Hook
+  描    述: 消息监控
   输    入: 
   输    出: 
   返    回: 
   修改记录: 
  *******************************************************/
-void CDispatch::OpenMsgHook()
+void CDispatch::Hook(objMsg *message)
 {
-    AutoObjLock(this);
+    if (!message || !m_hookFlag || !m_logPrint)
+    {
+        return;
+    }
 
-    m_dwMsgHookFlag = DCOP_OPEN;
-}
+    DWORD dwSrcID = message->GetSrcID();
+    DWORD dwDstID = message->GetDstID();
 
-/*******************************************************
-  函 数 名: CDispatch::CloseMsgHook
-  描    述: 关闭消息钩子
-  输    入: 
-  输    出: 
-  返    回: 
-  修改记录: 
- *******************************************************/
-void CDispatch::CloseMsgHook()
-{
-    AutoObjLock(this);
+    if (m_srcID && (dwSrcID != m_srcID))
+    {
+        return;
+    }
 
-    m_dwMsgHookFlag = DCOP_CLOSE;
-}
+    if (m_dstID && (dwDstID != m_dstID))
+    {
+        return;
+    }
 
-/*******************************************************
-  函 数 名: CDispatch::GetMsgHookFlag
-  描    述: 获取消息钩子
-  输    入: 
-  输    出: 
-  返    回: 
-  修改记录: 
- *******************************************************/
-DWORD CDispatch::GetMsgHookFlag()
-{
-    AutoObjLock(this);
+    const char *pcszSrcName = "Null";
+    IObject *piSrcObj = 0;
+    DCOP_QUERY_OBJECT(IObject, dwSrcID, Parent(), piSrcObj);
+    if (piSrcObj) pcszSrcName = piSrcObj->Name();
 
-    return m_dwMsgHookFlag;
+    const char *pcszDstName = "Null";
+    IObject *piDstObj = 0;
+    DCOP_QUERY_OBJECT(IObject, dwDstID, Parent(), piDstObj);
+    if (piDstObj) pcszDstName = piDstObj->Name();
+
+    DWORD dwDispLen = message->GetDataLen();
+    if (m_lenMax && (dwDispLen > m_lenMax)) dwDispLen = m_lenMax;
+
+    PrintBuffer(STR_FORMAT("[MSG HOOK] '%s'(%d) -> '%s'(%d) Len:%d", 
+                    pcszSrcName, dwSrcID, pcszDstName, dwDstID, message->GetDataLen()), 
+                    message->GetDataBuf(), dwDispLen, m_logPrint, m_logPara);
 }
 
 /*******************************************************

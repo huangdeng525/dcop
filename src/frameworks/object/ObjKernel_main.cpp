@@ -56,14 +56,18 @@ void CFrameKernel::CReferNode::OnReferto(Instance *refer)
 
     /// 走到这里，表示是新添加了引用，则重新整理数组
     m_refer.Clear();
+    m_refcnt.Clear();
     if (!m_count.size())
     {
         return;
     }
 
+    (void)m_refer.Set(m_count.size() - 1, 0);
+    (void)m_refcnt.Set(m_count.size() - 1, 0);
     for (it = m_count.begin(); it != m_count.end(); ++it)
     {
         (void)m_refer.Append((void *)&((*it).first));
+        (void)m_refcnt.Append((void *)&((*it).second));
     }
 }
 
@@ -97,14 +101,18 @@ void CFrameKernel::CReferNode::OnRelease(Instance *refer)
 
     /// 走到这里，表示是新删除了引用，则重新整理数组
     m_refer.Clear();
+    m_refcnt.Clear();
     if (!m_count.size())
     {
         return;
     }
 
+    (void)m_refer.Set(m_count.size() - 1, 0);
+    (void)m_refcnt.Set(m_count.size() - 1, 0);
     for (it = m_count.begin(); it != m_count.end(); ++it)
     {
         (void)m_refer.Append((void *)&((*it).first));
+        (void)m_refcnt.Append((void *)&((*it).second));
     }
 }
 
@@ -125,6 +133,25 @@ void CFrameKernel::CReferNode::OnGetRefer(Instance ***refers, DWORD *count)
 
     *refers = (Instance **)m_refer.Get();
     *count  = m_refer.Count();
+}
+
+/*******************************************************
+  函 数 名: CFrameKernel::CReferNode::OnGetReferCount
+  描    述: 获取引用计数时
+  输    入: 
+  输    出: 
+  返    回: 
+  修改记录: 
+ *******************************************************/
+void CFrameKernel::CReferNode::OnGetReferCount(DWORD **refercount, DWORD *count)
+{
+    if (!refercount || !count)
+    {
+        return;
+    }
+
+    *refercount = (DWORD *)m_refcnt.Get();
+    *count      = m_refcnt.Count();
 }
 
 /*******************************************************
@@ -194,6 +221,13 @@ CFrameKernel::~CFrameKernel()
         delete m_pTask;
         m_pTask = 0;
     }
+
+    g_onInstanceQueryInterface          = 0;
+    g_onInstanceQueryInterfacePara      = 0;
+    g_onInstanceRelease                 = 0;
+    g_onInstanceReleasePara             = 0;
+    g_onInstanceGetRef                  = 0;
+    g_onInstanceGetRefPara              = 0;
 }
 
 /*******************************************************
@@ -262,6 +296,10 @@ void CFrameKernel::Dump(LOG_PRINT logPrint, LOG_PARA logPara, int argc, void **a
             continue;
         }
 
+        DWORD *pdwReferCount = 0;
+        DWORD dwCounterCount = 0;
+        ((*it).second).OnGetReferCount(&pdwReferCount, &dwCounterCount);
+
         for (DWORD i = 0; i < dwReferCount; ++i)
         {
             Instance *piRefer = ppiRefers[i];
@@ -270,10 +308,13 @@ void CFrameKernel::Dump(LOG_PRINT logPrint, LOG_PARA logPara, int argc, void **a
                 continue;
             }
 
-            logPrint(STR_FORMAT("    '%s'(id:%d)[inst:%p] \r\n", 
-                        piRefer->Name(), piRefer->ID(), piRefer), logPara);
+            logPrint(STR_FORMAT("    '%s'(id:%d)[inst:%p](count:%d) \r\n", 
+                        piRefer->Name(), piRefer->ID(), piRefer, 
+                        (i < dwCounterCount)? pdwReferCount[i] : 0), logPara);
         }
     }
+
+    osBase::Dump(logPrint, logPara, argc, argv);
 }
 
 /*******************************************************
@@ -312,7 +353,6 @@ objBase *CFrameKernel::Start(const char *cfgDeploy)
     TRACE_LOG(STR_FORMAT("System(%d) InitAllObjects OK!", piManager->GetSystemID()));
     piManager->Dump(PrintToConsole, 0, 0, 0);
     Dump(PrintToConsole, 0, 0, 0);
-    osBase::Dump(PrintToConsole, 0, 0, 0);
 
     return piManager;
 }

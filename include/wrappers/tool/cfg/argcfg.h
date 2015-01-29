@@ -93,8 +93,8 @@ public:
         }
 
         /// 匹配其中一个配置名，设置为已配置
-        if ((m_cfgType->GetSimpleName() && !strcmp(argv[iPos], m_cfgType->GetSimpleName())) ||
-            (m_cfgType->GetFullName() && !strcmp(argv[iPos], m_cfgType->GetFullName())))
+        if ((m_cfgType->GetSimpleName() && !stricmp(argv[iPos], m_cfgType->GetSimpleName())) ||
+            (m_cfgType->GetFullName() && !stricmp(argv[iPos], m_cfgType->GetFullName())))
         {
             m_bConfig = true;
             return 0;
