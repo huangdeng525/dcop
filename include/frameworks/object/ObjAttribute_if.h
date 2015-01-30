@@ -16,6 +16,7 @@
 #include "ObjNotify_if.h"
 #include "ObjDispatch_if.h"
 #include "ObjResponse_if.h"
+#include "ObjControl_if.h"
 #include "stream/dstream.h"
 
 
