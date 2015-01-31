@@ -34,10 +34,11 @@
 
 #define DCOP_OBJECT_SESSION                 20              // 会话管理
 #define DCOP_OBJECT_USER                    21              // 用户管理
-#define DCOP_OBJECT_ACCESS                  22              // 分布式接入
-#define DCOP_OBJECT_COMMAND                 23              // 命令行接入
-#define DCOP_OBJECT_HTTPD                   24              // 超文本接入
-#define DCOP_OBJECT_RESTFUL                 25              // Rest API
+#define DCOP_OBJECT_SECURE                  22              // 用户管理
+#define DCOP_OBJECT_ACCESS                  23              // 分布式接入
+#define DCOP_OBJECT_COMMAND                 24              // 命令行接入
+#define DCOP_OBJECT_HTTPD                   25              // 超文本接入
+#define DCOP_OBJECT_RESTFUL                 26              // Rest API
 
 #define DCOP_OBJECT_MONITOR                 50              // 系统监控
 
