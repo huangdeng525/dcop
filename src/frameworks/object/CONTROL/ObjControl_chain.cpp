@@ -134,11 +134,6 @@ DWORD CControlChain::OnCtrl(objMsg *pInput,
         }
 
         dwRc = pNode->m_function(pInput, pOutput, bContinue, pNode->m_ctrler);
-        if (dwRc != SUCCESS)
-        {
-            continue;
-        }
-
         if (!bContinue)
         {
             break;
