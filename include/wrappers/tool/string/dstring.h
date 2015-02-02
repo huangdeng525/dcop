@@ -170,6 +170,14 @@ public:
         return *this;
     }
 
+    /// 打印到字符串的回调
+    static void Print(const char *info, void *para)
+    {
+        CDString *pString = (CDString *)para;
+        if (!pString) return;
+        pString->Insert(TAIL, info);
+    }
+
 private:
     char *Copy(const char *cpszStr, DWORD dwLen = 0);
     char *Located(char *pszStr, const char *cpszChr);

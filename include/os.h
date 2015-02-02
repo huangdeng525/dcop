@@ -143,6 +143,7 @@ extern void *               DCOP_ReallocEx(void *p, size_t size, const char *fil
 extern void                 DebugMemStatus(int status);
 extern void                 OutputMemLog(int console);
 extern void                 RecordMemDetail(int enable, int only_cur_task, const char *only_file_name);
+extern void                 RecordAllocCallstack(int enable);
 extern void                 DumpMemInfo();
 #ifdef __cplusplus
     }
