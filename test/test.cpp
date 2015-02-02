@@ -272,6 +272,7 @@ TEST(test_main, TestBaseAssert)
 
     /// 打开内存跟踪
     DebugMemStatus(1);
+    RecordAllocCallstack(1);
     OutputMemLog(1);
 
     /// 初始化测试套
