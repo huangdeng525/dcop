@@ -39,6 +39,7 @@ CMemTrack::CMemTrack()
     m_record_detail = false;
     m_cur_task_id = 0;
     (void)memset(m_file_name, 0, sizeof(m_file_name));
+    m_record_alloc_callstack = false;
 }
 
 /*******************************************************
@@ -147,7 +148,7 @@ void CMemTrack::AddTrack(void *address, size_t size, const char *file, int line)
 
     file = GetFileName(file);
 
-    if (sg_pMemLog && g_mem_track.GetRecordDetail(file))
+    if (sg_pMemLog && GetRecordDetail(file))
     {
         objTask *pTask = objTask::Current();
         sg_pMemLog->Write(STR_FORMAT(" ADDRESS '%p' (len:%d) Alloc in %s:%d, curTask:'%s'(%d). \r\n",
@@ -173,8 +174,12 @@ void CMemTrack::AddTrack(void *address, size_t size, const char *file, int line)
 
     /// 申请记录到map容器
     m_alloc_count++;
-    m_track_alloc_info.insert(MAP_ALLOC::value_type(address, info));
-    m_track_free_info.erase(address);
+    IT_ALLOC it = m_track_alloc_info.insert(m_track_alloc_info.end(), MAP_ALLOC::value_type(address, info));
+    if ((it != m_track_alloc_info.end()) && m_record_alloc_callstack)
+    {
+        ShowCallStack(CDString::Print, &(((*it).second).callstack), 0);
+    }
+    (void)m_track_free_info.erase(address);
 
     m_track_inside = 0;
 };
@@ -221,7 +226,7 @@ void CMemTrack::RemoveTrack(void *address, const char *file, int line)
 
     file = GetFileName(file);
 
-    if (sg_pMemLog && g_mem_track.GetRecordDetail(file))
+    if (sg_pMemLog && GetRecordDetail(file))
     {
         objTask *pTask = objTask::Current();
         sg_pMemLog->Write(STR_FORMAT(" ADDRESS '%p' Free in %s:%d, curTask:'%s'(%d). \r\n",
@@ -269,7 +274,7 @@ void CMemTrack::RemoveTrack(void *address, const char *file, int line)
             m_over_write_count++;
             if (sg_pMemLog)
             {
-                sg_pMemLog->Write(STR_FORMAT("ADDRESS '%p' %d bytes overwrited! Alloc in %s:%d, Free in %s:%d. \r\n", 
+                sg_pMemLog->Write(STR_FORMAT(" ADDRESS '%p' %d bytes overwrited! Alloc in %s:%d, Free in %s:%d. \r\n", 
                         ((*it).second).address, 
                         ((*it).second).size, 
                         ((*it).second).file, 
@@ -402,6 +407,7 @@ void CMemTrack::DumpMemInfo()
                         line), 
                         address, 
                         ((size > 64)? 64 : size));
+            sg_pMemLog->Write(((*i).second).callstack);
         }
         totalSize += ((*i).second).size;
     }
@@ -558,6 +564,19 @@ void OutputMemLog(int console)
 void RecordMemDetail(int enable, int only_cur_task, const char *only_file_name)
 {
     g_mem_track.SetRecordDetail((enable)? true : false, (only_cur_task)? true : false, only_file_name);
+}
+
+/*******************************************************
+  函 数 名: 设置是否记录分配调用栈
+  描    述: 详细记录开关
+  输    入: 
+  输    出: 
+  返    回: 
+  修改记录: 
+ *******************************************************/
+void RecordAllocCallstack(int enable)
+{
+    g_mem_track.SetRecordAllocCallstack((enable)? true : false);
 }
 
 /*******************************************************

@@ -34,7 +34,7 @@
 
 #define DCOP_OBJECT_SESSION                 20              // 会话管理
 #define DCOP_OBJECT_USER                    21              // 用户管理
-#define DCOP_OBJECT_SECURE                  22              // 用户管理
+#define DCOP_OBJECT_SECURE                  22              // 安全管理
 #define DCOP_OBJECT_ACCESS                  23              // 分布式接入
 #define DCOP_OBJECT_COMMAND                 24              // 命令行接入
 #define DCOP_OBJECT_HTTPD                   25              // 超文本接入

@@ -22,7 +22,7 @@ INTF_VER(ISecure, 1, 0, 0);
 /// -------------------------------------------------
 interface ISecure : public IObject
 {
-
+    
 };
 
 
