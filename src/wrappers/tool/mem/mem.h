@@ -22,6 +22,7 @@
 #include <map>
 #include "sem.h"
 #include "fs/file.h"
+#include "string/dstring.h"
 
 
 #undef new              /// new只能使用原生实现
@@ -46,6 +47,7 @@ public:
         size_t size;
         const char *file;
         int line;
+        CDString callstack;
     }MEM_INFO;
 
     /// 内存信息记录容器
@@ -84,6 +86,9 @@ public:
     void SetRecordDetail(bool enable, bool only_cur_task, const char *only_file_name);
     bool GetRecordDetail(const char *file);
 
+    /// 设置是否记录分配调用栈
+    void SetRecordAllocCallstack(bool enable) {m_record_alloc_callstack = enable;}
+
     /// 打印内存信息
     void DumpMemInfo();
 
@@ -102,6 +107,7 @@ private:
     bool m_record_detail;
     DWORD m_cur_task_id;
     char m_file_name[DCOP_FILE_NAME_LEN];
+    bool m_record_alloc_callstack;
 };
 
 
