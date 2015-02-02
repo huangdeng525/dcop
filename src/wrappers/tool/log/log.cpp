@@ -114,7 +114,9 @@ void PrintLogEx(const char *info, LOG_PRINT print, LOG_PARA para, const char *fi
 
     char szStr[STR_FORMAT_LEN_MAX];
     int pos = GetLogTime(szStr, sizeof(szStr));
-    pos += snprintf(szStr+pos, sizeof(szStr)-pos, "%s", info);
+    int lprint = snprintf(szStr+pos, sizeof(szStr)-pos, "%s", info);
+    if (lprint < 0) pos = (int)strlen(szStr);
+    else pos += lprint;
 
     while (pos && ((szStr[pos-1] == '\n') || 
                    (szStr[pos-1] == '\r') || 
