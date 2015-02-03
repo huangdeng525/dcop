@@ -241,6 +241,61 @@ void CModel::Fini()
 }
 
 /*******************************************************
+  函 数 名: CModel::Dump
+  描    述: Dump入口
+  输    入: 
+  输    出: 
+  返    回: 
+  修改记录: 
+ *******************************************************/
+void CModel::Dump(LOG_PRINT logPrint, LOG_PARA logPara, int argc, void **argv)
+{
+    if (!logPrint)
+    {
+        return;
+    }
+
+    AutoObjLock(this);
+
+    for (IT_TABLES it = m_tables.begin(); it != m_tables.end(); ++it)
+    {
+        logPrint(STR_FORMAT("['%s'] \r\n", ((*it).second).m_szTableName), logPara);
+        logPrint(STR_FORMAT("    objID:%d \r\n", ((*it).second).m_objID), logPara);
+        logPrint(STR_FORMAT("    attrID:0x%x \r\n", ((*it).second).m_attrID), logPara);
+        logPrint(STR_FORMAT("    attrType:%d \r\n", ((*it).second).m_attrType), logPara);
+
+        for (DWORD i = 0; i < ((*it).second).m_dwFieldCount; ++i)
+        {
+            if (!((*it).second).m_pFields)
+            {
+                continue;
+            }
+
+            logPrint(STR_FORMAT("    fieldID:%d \r\n", i+1), logPara);
+            logPrint(STR_FORMAT("        fieldName:'%s' \r\n", ((*it).second).m_pFields[i].m_fieldName), logPara);
+            logPrint(STR_FORMAT("        isKey:%d \r\n", ((*it).second).m_pFields[i].m_isKey), logPara);
+            logPrint(STR_FORMAT("        fieldType:%d \r\n", ((*it).second).m_pFields[i].m_fieldType), logPara);
+            logPrint(STR_FORMAT("        fieldSize:%d \r\n", ((*it).second).m_pFields[i].m_fieldSize), logPara);
+            logPrint(STR_FORMAT("        defaultValue:%d \r\n", ((*it).second).m_pFields[i].m_defaultValue), logPara);
+            logPrint(STR_FORMAT("        minValue:%d \r\n", ((*it).second).m_pFields[i].m_minValue), logPara);
+            logPrint(STR_FORMAT("        maxValue:%d \r\n", ((*it).second).m_pFields[i].m_maxValue), logPara);
+        }
+
+        for (DWORD i = 0; i < ((*it).second).m_dwShipCount; ++i)
+        {
+            if (!((*it).second).m_pShips)
+            {
+                continue;
+            }
+
+            logPrint(STR_FORMAT("    relationID:%d \r\n", ((*it).second).m_pShips[i].m_relID), logPara);
+            logPrint(STR_FORMAT("        relationAttrID:0x%x \r\n", ((*it).second).m_pShips[i].m_attrID), logPara);
+            logPrint(STR_FORMAT("        relationFieldID:%d \r\n", ((*it).second).m_pShips[i].m_fieldID), logPara);
+        }
+    }
+}
+
+/*******************************************************
   函 数 名: CModel::RegTable
   描    述: 注册表及字段
   输    入: 

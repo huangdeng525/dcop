@@ -83,7 +83,7 @@ void CControlChain::Dump(LOG_PRINT logPrint, LOG_PARA logPara, int argc, void **
         tableStr << STR_FORMAT("%d", pNode->m_attribute);
         tableStr << STR_FORMAT("%d", pNode->m_ctrl);
         tableStr << STR_FORMAT("%d", pNode->m_ack);
-        tableStr << STR_FORMAT("%d", pNode->m_usergroup);
+        tableStr << STR_FORMAT("%d", pNode->m_group);
         tableStr << STR_FORMAT("%d", pNode->m_tty);
         tableStr << STR_FORMAT("%p", pNode->m_function);
         tableStr << STR_FORMAT("%s(%d)", 
@@ -167,7 +167,7 @@ DWORD CControlChain::RegCtrlNode(IObject *ctrler,
         node.m_attribute = ctrls->m_attribute;
         node.m_ctrl = ctrls->m_ctrl;
         node.m_ack = ctrls->m_ack;
-        node.m_usergroup = ctrls->m_usergroup;
+        node.m_group = ctrls->m_group;
         node.m_tty = ctrls->m_tty;
         node.m_function = ctrls->m_function;
         node.m_ctrler = ctrler;
@@ -240,7 +240,7 @@ bool CControlChain::IsCtrlNode(Node *pNode, DCOP_SESSION_HEAD *pSessionHead)
 {
     if (!pNode || !pSessionHead) return false;
 
-    if (pNode->m_attribute != pSessionHead->m_attribute)
+    if (pNode->m_attribute && (pNode->m_attribute != pSessionHead->m_attribute))
     {
         return false;
     }
@@ -255,7 +255,7 @@ bool CControlChain::IsCtrlNode(Node *pNode, DCOP_SESSION_HEAD *pSessionHead)
         return false;
     }
 
-    if (pNode->m_usergroup && (pNode->m_usergroup != pSessionHead->m_user))
+    if (pNode->m_group && (pNode->m_group != pSessionHead->m_group))
     {
         return false;
     }

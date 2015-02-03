@@ -1157,10 +1157,12 @@ DWORD IObjectMember::PackMsg(IDispatch *pDispatch,
     for (DWORD i = 0; i < aMsgParaData.Count(); ++i)
     {
         /// 剩下的数据无法放下一条记录，只有进行发送
-        if ((dwOffset + pMsgHead->m_headSize + dwMsgParaLen) > dwLen)
+        /// 不能超过255，因为会话消息头中的数量是BYTE类型
+        if (((dwOffset + pMsgHead->m_headSize + dwMsgParaLen) > dwLen) ||
+            (dwSendCount > 255))
         {
             if (DCOP_RSP(pBufSend->m_ack)) pBufSend->m_ack = DCOP_RSP_CON;
-            pBufSend->m_count = (WORD)dwSendCount;
+            pBufSend->m_count = (BYTE)dwSendCount;
             pBufSend->m_type.m_valueLen = (WORD)(dwOffset - sizeof(DCOP_SESSION_HEAD));
             BYTES_CHANGE_SESSION_HEAD_ORDER(pBufSend);
             pMsgSend->MsgHead().m_dwDataLen = dwOffset;
@@ -1230,7 +1232,7 @@ DWORD IObjectMember::PackMsg(IDispatch *pDispatch,
     if (pMsgSend)
     {
         if (DCOP_RSP(pBufSend->m_ack)) pBufSend->m_ack = DCOP_RSP_END;
-        pBufSend->m_count = (WORD)dwSendCount;
+        pBufSend->m_count = (BYTE)dwSendCount;
         pBufSend->m_type.m_valueLen = (WORD)(dwOffset - sizeof(DCOP_SESSION_HEAD));
         BYTES_CHANGE_SESSION_HEAD_ORDER(pBufSend);
         pMsgSend->MsgHead().m_dwDataLen = dwOffset;
@@ -1276,6 +1278,9 @@ DWORD IObjectMember::PackMsg(IDispatch *pDispatch,
     if (!pDispatch && !ppOutMsg) return FAILURE;
     if (!pSessionHead) return FAILURE;
     if (dwPackNodeCount && !pPackNode) return FAILURE;
+
+    /// 不能超过255，因为会话消息头中的数量是BYTE类型
+    if (dwPackNodeCount > 255) return FAILURE;
 
     /////////////////////////////////////////////////
     /// 获取组包节点的总长度
@@ -1374,7 +1379,7 @@ DWORD IObjectMember::PackMsg(IDispatch *pDispatch,
                         pMsg->GetDataBuf(), pMsg->GetDataLen(), printf, 0);
     #endif
 
-    pBuf->m_count = (WORD)dwSendCount;
+    pBuf->m_count = (BYTE)dwSendCount;
     pBuf->m_type.m_valueLen = (WORD)(dwOffset - sizeof(DCOP_SESSION_HEAD));
     BYTES_CHANGE_SESSION_HEAD_ORDER(pBuf);
     pMsg->MsgHead().m_dwDataLen = dwOffset;

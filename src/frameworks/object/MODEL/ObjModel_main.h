@@ -64,6 +64,8 @@ public:
     DWORD Init(IObject *root, int argc, void **argv);
     void Fini();
 
+    void Dump(LOG_PRINT logPrint, LOG_PARA logPara, int argc, void **argv);
+
     DWORD RegTable(char tableName[DCOP_TABLE_NAME_LEN],
                         DWORD objID,
                         DWORD attrID,

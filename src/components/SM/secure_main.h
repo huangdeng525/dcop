@@ -9,6 +9,8 @@
 #define _SECURE_MAIN_H_
 
 #include "secure_if.h"
+#include "ObjAttribute_if.h"
+#include "ObjControl_if.h"
 
 
 /// -------------------------------------------------
@@ -23,15 +25,26 @@ public:
     DCOP_DECLARE_INSTANCE;
     DCOP_DECLARE_IOBJECT;
 
+    DCOP_DECLARE_IOBJECT_MSG_HANDLE;
+
     DWORD Init(IObject *root, int argc, void **argv);
     void Fini();
 
     void Dump(LOG_PRINT logPrint, LOG_PARA logPara, int argc, void **argv);
 
+    void OnStart(objMsg *msg);
+    void OnFinish(objMsg *msg);
+
 private:
-    
+    static DWORD InputCtrl(objMsg *pInput,
+                        objMsg *&pOutput,
+                        bool &bContinue,
+                        IObject *piCtrler);
+
+private:
+    IControl *m_piControl;
 };
 
 
-#endif // #ifndef _SECURE_IF_H_
+#endif // #ifndef _SECURE_MAIN_H_
 

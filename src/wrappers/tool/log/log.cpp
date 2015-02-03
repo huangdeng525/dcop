@@ -115,6 +115,7 @@ void PrintLogEx(const char *info, LOG_PRINT print, LOG_PARA para, const char *fi
     char szStr[STR_FORMAT_LEN_MAX];
     int pos = GetLogTime(szStr, sizeof(szStr));
     int lprint = snprintf(szStr+pos, sizeof(szStr)-pos, "%s", info);
+    szStr[sizeof(szStr)-1] = '\0';
     if (lprint < 0) pos = (int)strlen(szStr);
     else pos += lprint;
 
@@ -128,6 +129,7 @@ void PrintLogEx(const char *info, LOG_PRINT print, LOG_PARA para, const char *fi
     pos += GetLogFileNameAndLine(szStr+pos, sizeof(szStr)-pos, file, line);
 
     (void)snprintf(szStr+pos, sizeof(szStr)-pos, "\r\n");
+    szStr[sizeof(szStr)-1] = '\0';
 
     print(szStr, para);
 }
@@ -541,11 +543,6 @@ void CLog::Write(const char *info, const void *buf, size_t len, const char *file
     AutoLogLock(this);
 
     PrintBufferEx(info, buf, len, PrintCallBack, this, file, line);
-
-    if (m_bOutputToConsole)
-    {
-        PrintBufferEx(info, buf, len, PrintToConsole, 0, file, line);
-    }
 }
 
 /*******************************************************

@@ -89,7 +89,8 @@ typedef struct tagDCOP_SESSION_HEAD
 {
     DCOP_MSG_HEAD m_type;                   // 基本类型
     WORD m_ver;                             // 版本(见'DCOP_SESSION_VER')
-    WORD m_count;                           // 携带的消息节点数量
+    BYTE m_count;                           // 携带的消息节点数量
+    BYTE m_group;                           // 用户组(类型)
     DWORD m_session;                        // 会话号
     DWORD m_user;                           // 用户ID
     DWORD m_tty;                            // 终端类型ID
