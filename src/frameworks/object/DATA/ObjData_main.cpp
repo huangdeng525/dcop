@@ -128,7 +128,8 @@ void CData::Dump(LOG_PRINT logPrint, LOG_PARA logPara, int argc, void **argv)
 {
     AutoObjLock(this);
 
-    if (!argc)
+    /// 因为dump需要输入参数长度，所以配置数不能少于2
+    if (argc <= 2)
     {
         for (IT_DATA it_data = m_datas.begin();
             it_data != m_datas.end(); ++it_data)
