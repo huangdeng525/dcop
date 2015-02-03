@@ -567,8 +567,8 @@ void RecordMemDetail(int enable, int only_cur_task, const char *only_file_name)
 }
 
 /*******************************************************
-  函 数 名: 设置是否记录分配调用栈
-  描    述: 详细记录开关
+  函 数 名: RecordAllocCallstack
+  描    述: 设置是否记录分配调用栈
   输    入: 
   输    出: 
   返    回: 
