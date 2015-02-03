@@ -36,7 +36,7 @@ interface IControl : public IObject
         DWORD m_attribute;                          // 属性ID
         BYTE m_ctrl;                                // 控制类型
         BYTE m_ack;                                 // 应答类型
-        BYTE m_usergroup;                           // 用户组类型
+        BYTE m_group;                               // 用户组类型
         BYTE m_tty;                                 // 终端类型
         ON_CTRL_FUNC m_function;                    // 回调函数
     };
