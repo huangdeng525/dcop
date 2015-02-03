@@ -22,7 +22,22 @@ INTF_VER(ISecure, 1, 0, 0);
 /// -------------------------------------------------
 interface ISecure : public IObject
 {
-    
+    /// ½Úµã
+    struct NODE
+    {
+        DWORD OwnerAttr;
+        DWORD OwnerField;
+        DWORD OwnerRight;
+        DWORD VisitorAttr;
+        DWORD VisitorField;
+        DWORD VisitorRight;
+        DWORD UserAttr;
+        DWORD UserField;
+        DWORD UserRight;
+        DWORD AdminAttr;
+        DWORD AdminField;
+        DWORD AdminRight;
+    };
 };
 
 
