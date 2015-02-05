@@ -105,6 +105,8 @@ enum DCOP_ERRCODE_IO
 {
     ERRCODE_IO_BASE         = (ERRCODE_IO) << 16,
 
+    ERRCODE_IO_NO_RIGHT_TO_OPERATE,             // 操作权限不够
+
     ERRCODE_IO_END
 };
 
