@@ -8,6 +8,8 @@
 #ifndef _SECURE_MAIN_H_
 #define _SECURE_MAIN_H_
 
+#define INC_MAP
+
 #include "secure_if.h"
 #include "ObjAttribute_if.h"
 #include "ObjControl_if.h"
@@ -18,6 +20,17 @@
 /// -------------------------------------------------
 class CSecure : public ISecure
 {
+public:
+    typedef DWORD (CSecure::*CHECK_FUNC)(DCOP_SESSION_HEAD *pSession,
+                        ISecure::Node *pRule,
+                        objMsg *pInput,
+                        objMsg *&pOutput,
+                        bool &bContinue,
+                        bool &bCheck);
+
+    typedef std::map<DWORD, ISecure::Node> MAP_RULES;
+    typedef MAP_RULES::iterator IT_RULES;
+
 public:
     CSecure(Instance *piParent, int argc, char **argv);
     ~CSecure();
@@ -35,13 +48,57 @@ public:
     void OnStart(objMsg *msg);
     void OnFinish(objMsg *msg);
 
+    DWORD RegRule(Node *rules, DWORD count);
+
 private:
     static DWORD InputCtrl(objMsg *pInput,
                         objMsg *&pOutput,
                         bool &bContinue,
                         IObject *piCtrler);
 
+    ISecure::Node *GetRuleNode(DWORD attrID);
+
+    DWORD CheckAllRule(objMsg *pInput,
+                        objMsg *&pOutput,
+                        bool &bContinue);
+
+    DWORD CheckOperatorRule(DCOP_SESSION_HEAD *pSession,
+                        ISecure::Node *pRule,
+                        objMsg *pInput,
+                        objMsg *&pOutput,
+                        bool &bContinue,
+                        bool &bCheck);
+
+    DWORD CheckOwnerRule(DCOP_SESSION_HEAD *pSession,
+                        ISecure::Node *pRule,
+                        objMsg *pInput,
+                        objMsg *&pOutput,
+                        bool &bContinue,
+                        bool &bCheck);
+
+    DWORD CheckVisitorRule(DCOP_SESSION_HEAD *pSession,
+                        ISecure::Node *pRule,
+                        objMsg *pInput,
+                        objMsg *&pOutput,
+                        bool &bContinue,
+                        bool &bCheck);
+
+    DWORD CheckUserRule(DCOP_SESSION_HEAD *pSession,
+                        ISecure::Node *pRule,
+                        objMsg *pInput,
+                        objMsg *&pOutput,
+                        bool &bContinue,
+                        bool &bCheck);
+
+    DWORD CheckManagerRule(DCOP_SESSION_HEAD *pSession,
+                        ISecure::Node *pRule,
+                        objMsg *pInput,
+                        objMsg *&pOutput,
+                        bool &bContinue,
+                        bool &bCheck);
+
 private:
+    MAP_RULES m_rules;
     IControl *m_piControl;
 };
 

@@ -11,6 +11,7 @@
 #include "session_if.h"
 #include "ObjAttribute_if.h"
 #include "ObjResponse_if.h"
+#include "secure_if.h"
 #include "cpu/bytes.h"
 
 
@@ -170,8 +171,10 @@ private:
     INotify::IPool *m_pNotifyPool;                  // 事件缓冲池
 
     ITimer *m_piTimer;                              // 定时器
-    ITimer::Handle m_hTimer1s;
-    ITimer::IWheel *m_pTimerWheel;
+    ITimer::Handle m_hTimer1s;                      // 1S定时器句柄
+    ITimer::IWheel *m_pTimerWheel;                  // 定时器轮
+
+    ISecure *m_piSecure;                            // 安全管理
 };
 
 

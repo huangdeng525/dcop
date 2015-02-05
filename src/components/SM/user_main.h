@@ -10,6 +10,7 @@
 
 #include "user_if.h"
 #include "ObjAttribute_if.h"
+#include "secure_if.h"
 
 
 /// -------------------------------------------------
@@ -131,6 +132,8 @@ private:
     IDispatch *m_piDispatch;                        // 消息分发器
     INotify *m_piNotify;                            // 事件通知器
     INotify::IPool *m_pNotifyPool;                  // 事件缓冲池
+
+    ISecure *m_piSecure;                            // 安全管理
 };
 
 

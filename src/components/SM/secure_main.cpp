@@ -121,6 +121,17 @@ void CSecure::Fini()
  *******************************************************/
 void CSecure::Dump(LOG_PRINT logPrint, LOG_PARA logPara, int argc, void **argv)
 {
+    if (!logPrint) return;
+
+    AutoObjLock(this);
+
+    for (IT_RULES it = m_rules.begin(); it != m_rules.end(); ++it)
+    {
+        logPrint(STR_FORMAT("ownerAttr:0x%x \r\n", ((*it).second).m_ownerAttr), logPara);
+        logPrint(STR_FORMAT("    ownerField:%d \r\n", ((*it).second).m_ownerField), logPara);
+        logPrint(STR_FORMAT("    ownerRight:%d \r\n", ((*it).second).m_ownerRight), logPara);
+        logPrint(STR_FORMAT("    systemOperator:%d \r\n", ((*it).second).m_systemOperator), logPara);
+    }
 }
 
 /*******************************************************
@@ -161,6 +172,34 @@ void CSecure::OnFinish(objMsg *msg)
 }
 
 /*******************************************************
+  函 数 名: CSecure::RegRule
+  描    述: 注册安全检查规则
+  输    入: 
+  输    出: 
+  返    回: 
+  修改记录: 
+ *******************************************************/
+DWORD CSecure::RegRule(Node *rules, DWORD count)
+{
+    if (!rules || !count) return FAILURE;
+
+    AutoObjLock(this);
+
+    for (DWORD i = 0; i < count; ++i)
+    {
+        IT_RULES it = m_rules.find(rules[i].m_ownerAttr);
+        if (it != m_rules.end())
+        {
+            continue;
+        }
+
+        (void)m_rules.insert(MAP_RULES::value_type(rules[i].m_ownerAttr, rules[i]));
+    }
+
+    return SUCCESS;
+}
+
+/*******************************************************
   函 数 名: CSecure::InputCtrl
   描    述: 输入控制
   输    入: 
@@ -173,29 +212,228 @@ DWORD CSecure::InputCtrl(objMsg *pInput,
                         bool &bContinue,
                         IObject *piCtrler)
 {
+    CSecure *pSecure = (CSecure *)piCtrler;
+    if (!pSecure)
+    {
+        return FAILURE;
+    }
+
+    return pSecure->CheckAllRule(pInput, pOutput, bContinue);
+}
+
+/*******************************************************
+  函 数 名: CSecure::GetRuleNode
+  描    述: 获取检查规则
+  输    入: 
+  输    出: 
+  返    回: 
+  修改记录: 
+ *******************************************************/
+ISecure::Node *CSecure::GetRuleNode(DWORD attrID)
+{
+    AutoObjLock(this);
+
+    IT_RULES it = m_rules.find(attrID);
+    if (it == m_rules.end())
+    {
+        return 0;
+    }
+
+    return &((*it).second);
+}
+
+/*******************************************************
+  函 数 名: CSecure::CheckAllRule
+  描    述: 检查所有规则
+  输    入: 
+  输    出: 
+  返    回: 
+  修改记录: 
+ *******************************************************/
+DWORD CSecure::CheckAllRule(objMsg *pInput,
+                        objMsg *&pOutput,
+                        bool &bContinue)
+{
+    if (!pInput) return FAILURE;
+
+    bool bCheck = false;
+    DWORD dwRc = FAILURE;
+
     /// 获取消息头
     CDArray aSessHeads;
     IObjectMember::GetMsgHead(pInput->GetDataBuf(), pInput->GetDataLen(), &aSessHeads, 0, 0, 0, 0);
-    if (!aSessHeads.Count())
+    for (DWORD sessIdx = 0; sessIdx < aSessHeads.Count(); ++sessIdx)
     {
-        return FAILURE;
-    }
+        /// 获取会话头
+        DCOP_SESSION_HEAD *pSessionHead = (DCOP_SESSION_HEAD *)aSessHeads.Pos(sessIdx);
+        if (!pSessionHead)
+        {
+            return FAILURE;
+        }
 
-    /// 获取会话头(只获取第一个会话头)
-    DCOP_SESSION_HEAD *pSessionHead = (DCOP_SESSION_HEAD *)aSessHeads.Pos(0);
-    if (!pSessionHead)
-    {
-        return FAILURE;
-    }
+        /// 获取规则节点
+        ISecure::Node *pRuleNode = GetRuleNode(pSessionHead->m_attribute);
+        if (!pRuleNode)
+        {
+            return FAILURE;
+        }
 
-    PrintLog(STR_FORMAT("group:%d\r\n session:%d\r\n user:%d\r\n tty:%d\r\n attribute:0x%x\r\n",
+        /// 功能函数列表
+        static CHECK_FUNC checkFunc[] = 
+        {
+            &CSecure::CheckOperatorRule,
+            &CSecure::CheckOwnerRule,
+            &CSecure::CheckVisitorRule,
+            &CSecure::CheckUserRule,
+            &CSecure::CheckManagerRule,
+        };
+
+        /// 依次检查
+        for (DWORD i = 0; i < ARRAY_SIZE(checkFunc); ++i)
+        {
+            if (!checkFunc[i])
+            {
+                continue;
+            }
+
+            dwRc = (this->*(checkFunc[i]))(pSessionHead,
+                        pRuleNode,
+                        pInput,
+                        pOutput,
+                        bContinue,
+                        bCheck);
+            if (bCheck)
+            {
+                break;
+            }
+        }
+
+        PrintLog(STR_FORMAT("group:%d\r\n session:%d\r\n user:%d\r\n tty:%d\r\n attribute:0x%x\r\n dwRc:%d \r\n",
                         pSessionHead->m_group,
                         pSessionHead->m_session,
                         pSessionHead->m_user,
                         pSessionHead->m_tty,
-                        pSessionHead->m_attribute), 
+                        pSessionHead->m_attribute,
+                        dwRc), 
                         PrintToConsole, 0);
 
-    return SUCCESS;
+        if (bCheck)
+        {
+            break;
+        }
+    }
+
+    return dwRc;
+}
+
+/*******************************************************
+  函 数 名: CSecure::CheckOperatorRule
+  描    述: 检查系统操作者权限
+  输    入: 
+  输    出: 
+  返    回: 
+  修改记录: 
+ *******************************************************/
+DWORD CSecure::CheckOperatorRule(DCOP_SESSION_HEAD *pSession,
+                        ISecure::Node *pRule,
+                        objMsg *pInput,
+                        objMsg *&pOutput,
+                        bool &bContinue,
+                        bool &bCheck)
+{
+    if (!pSession || !pRule)
+    {
+        return FAILURE;
+    }
+
+    /// 系统用户必须是监控者以上的用户
+    if (pRule->m_systemOperator < DCOP_GROUP_MONITOR)
+    {
+        return FAILURE;
+    }
+
+    /// 这里就是系统用户检查过的了，后面就不要检查其他用户了
+    bCheck = true;
+
+    if (pSession->m_group >= pRule->m_systemOperator)
+    {
+        return SUCCESS;
+    }
+
+    /// 没有权限，中断运行
+    bContinue = false;
+    return ERRCODE_IO_NO_RIGHT_TO_OPERATE;
+}
+
+/*******************************************************
+  函 数 名: CSecure::CheckOwnerRule
+  描    述: 检查所有者操作权限
+  输    入: 
+  输    出: 
+  返    回: 
+  修改记录: 
+ *******************************************************/
+DWORD CSecure::CheckOwnerRule(DCOP_SESSION_HEAD *pSession,
+                        ISecure::Node *pRule,
+                        objMsg *pInput,
+                        objMsg *&pOutput,
+                        bool &bContinue,
+                        bool &bCheck)
+{
+    return FAILURE;
+}
+
+/*******************************************************
+  函 数 名: CSecure::CheckVisitorRule
+  描    述: 检查参观者操作权限
+  输    入: 
+  输    出: 
+  返    回: 
+  修改记录: 
+ *******************************************************/
+DWORD CSecure::CheckVisitorRule(DCOP_SESSION_HEAD *pSession,
+                        ISecure::Node *pRule,
+                        objMsg *pInput,
+                        objMsg *&pOutput,
+                        bool &bContinue,
+                        bool &bCheck)
+{
+    return FAILURE;
+}
+
+/*******************************************************
+  函 数 名: CSecure::CheckUserRule
+  描    述: 检查一般用户操作权限
+  输    入: 
+  输    出: 
+  返    回: 
+  修改记录: 
+ *******************************************************/
+DWORD CSecure::CheckUserRule(DCOP_SESSION_HEAD *pSession,
+                        ISecure::Node *pRule,
+                        objMsg *pInput,
+                        objMsg *&pOutput,
+                        bool &bContinue,
+                        bool &bCheck)
+{
+    return FAILURE;
+}
+
+/*******************************************************
+  函 数 名: CSecure::CheckManagerRule
+  描    述: 检查管理用户操作权限
+  输    入: 
+  输    出: 
+  返    回: 
+  修改记录: 
+ *******************************************************/
+DWORD CSecure::CheckManagerRule(DCOP_SESSION_HEAD *pSession,
+                        ISecure::Node *pRule,
+                        objMsg *pInput,
+                        objMsg *&pOutput,
+                        bool &bContinue,
+                        bool &bCheck)
+{
+    return FAILURE;
 }
 
