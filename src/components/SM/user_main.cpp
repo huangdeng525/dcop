@@ -142,6 +142,8 @@ CUser::CUser(Instance *piParent, int argc, char **argv) :
     m_piNotify = 0;
     m_pNotifyPool = 0;
 
+    m_piSecure = 0;
+
     DCOP_CONSTRUCT_INSTANCE(piParent);
     DCOP_CONSTRUCT_IOBJECT(argc, argv);
 }
@@ -185,6 +187,7 @@ DWORD CUser::Init(IObject *root, int argc, void **argv)
         DCOP_QUERY_OBJECT_ITEM(IData,        DCOP_OBJECT_DATA,       m_piData)
         DCOP_QUERY_OBJECT_ITEM(IDispatch,    DCOP_OBJECT_DISPATCH,   m_piDispatch)
         DCOP_QUERY_OBJECT_ITEM(INotify,      DCOP_OBJECT_NOTIFY,     m_piNotify)
+        DCOP_QUERY_OBJECT_ITEM(ISecure,      DCOP_OBJECT_SECURE,     m_piSecure)
     DCOP_QUERY_OBJECT_END
 
     /// ´´½¨»º³å³Ø
@@ -225,6 +228,7 @@ void CUser::Fini()
         m_pNotifyPool = 0;
     }
 
+    DCOP_RELEASE_INSTANCE(m_piSecure);
     DCOP_RELEASE_INSTANCE(m_piNotify);
     DCOP_RELEASE_INSTANCE(m_piDispatch);
     DCOP_RELEASE_INSTANCE(m_piData);
@@ -243,6 +247,18 @@ void CUser::OnStart(objMsg *msg)
 {
     DWORD dwRc = InitModelData();
     CHECK_ERRCODE(dwRc, "Init Model Data");
+
+    if (m_piSecure)
+    {
+        ISecure::Node node[] = 
+        {
+            {m_users.GetAttribute()->GetID(), 
+                0, 0, 0, 0, 0, 0, 0, 0, 0, 
+                DCOP_GROUP_ADMINISTRATOR},
+        };
+        dwRc = m_piSecure->RegRule(node, ARRAY_SIZE(node));
+        CHECK_ERRCODE(dwRc, "Reg Sceure Rule");
+    }
 }
 
 /*******************************************************
