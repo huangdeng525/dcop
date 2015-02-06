@@ -63,27 +63,27 @@
 #define DCOP_OBJATTR_SESSION_TABLE          ((DCOP_OBJECT_SESSION   << (16)) | 1)   // 会话表
 #define DCOP_OBJATTR_USER_TABLE             ((DCOP_OBJECT_USER      << (16)) | 1)   // 用户表
 #define DCOP_OBJATTR_SECURE_TABLE           ((DCOP_OBJECT_SECURE    << (16)) | 1)   // 权限表
-#define DCOP_OBJATTR_ACCESS_LOGIN           ((DCOP_OBJECT_ACCESS    << (16)) | 1)   // 接入登陆
-#define DCOP_OBJATTR_ACCESS_LOGOUT          ((DCOP_OBJECT_ACCESS    << (16)) | 2)   // 退出登陆
+#define DCOP_OBJATTR_ACCESS_LOGIN           ((DCOP_OBJECT_ACCESS    << (16)) | 1)   // 接入登录
+#define DCOP_OBJATTR_ACCESS_LOGOUT          ((DCOP_OBJECT_ACCESS    << (16)) | 2)   // 退出登录
 
 
 /// -------------------------------------------------
 /// 用户组(类型)定义
 /// -------------------------------------------------
 
-#define DCOP_GROUP_VISITOR                  0               // 参观者   : 业务层面缺省用户，未登录时默认用户，权限约定受限
-#define DCOP_GROUP_USER                     1               // 用户     : 业务层面普通用户，具有具体业务的约定权限
-#define DCOP_GROUP_MANAGER                  2               // 管理者   : 业务层面管理用户，具有具体业务的管理权限
-#define DCOP_GROUP_MONITOR                  3               // 监控者   : 系统层面监控者，只能查看收集日志
-#define DCOP_GROUP_MAINTAINER               4               // 维护者   : 系统层面维护者，拥有操作权限，可下发维护命令
-#define DCOP_GROUP_ADMINISTRATOR            5               // 管理者   : 系统层面管理者，拥有所有权限
+#define DCOP_GROUP_VISITOR                  0       // 参观者   : 未登录时默认用户，权限约定受限
+#define DCOP_GROUP_USER                     1       // 用户     : 业务层面登录用户，具有具体业务的约定权限
+#define DCOP_GROUP_MONITOR                  2       // 监控者   : 系统层面监控者，只能查看收集日志
+#define DCOP_GROUP_MAINTAINER               3       // 维护者   : 系统层面维护者，拥有操作权限，可下发维护命令
+#define DCOP_GROUP_ADMINISTRATOR            4       // 管理者   : 系统层面管理者，拥有所有权限
+#define DCOP_GROUP_ROOT                     5       // 超级用户 : 只在原始启动shell才使用的，具有停止应用的权限
 
 
 /// -------------------------------------------------
 /// 临时访问用户
 /// -------------------------------------------------
 
-#define DCOP_USER_UNLOGIN                   0               // 未登录用户
+#define DCOP_USER_UNLOGIN                   0       // 未登录用户
 
 
 #endif // #ifndef _BASEID_H_

@@ -129,7 +129,14 @@ void CSecure::Dump(LOG_PRINT logPrint, LOG_PARA logPara, int argc, void **argv)
     {
         logPrint(STR_FORMAT("ownerAttr:0x%x \r\n", ((*it).second).m_ownerAttr), logPara);
         logPrint(STR_FORMAT("    ownerField:%d \r\n", ((*it).second).m_ownerField), logPara);
-        logPrint(STR_FORMAT("    ownerRight:%d \r\n", ((*it).second).m_ownerRight), logPara);
+        DumpRight("    ownerRight", logPrint, logPara, ((*it).second).m_ownerRight);
+        DumpRight("    visitorRight", logPrint, logPara, ((*it).second).m_visitorRight);
+        logPrint(STR_FORMAT("    userAttr:0x%x \r\n", ((*it).second).m_userAttr), logPara);
+        logPrint(STR_FORMAT("    userField:%d \r\n", ((*it).second).m_userField), logPara);
+        DumpRight("    userRight", logPrint, logPara, ((*it).second).m_userRight);
+        logPrint(STR_FORMAT("    managerAttr:0x%x \r\n", ((*it).second).m_managerAttr), logPara);
+        logPrint(STR_FORMAT("    managerField:%d \r\n", ((*it).second).m_managerField), logPara);
+        DumpRight("    managerRight", logPrint, logPara, ((*it).second).m_managerRight);
         logPrint(STR_FORMAT("    systemOperator:%d \r\n", ((*it).second).m_systemOperator), logPara);
     }
 }
@@ -268,17 +275,17 @@ DWORD CSecure::CheckAllRule(objMsg *pInput,
         DCOP_SESSION_HEAD *pSessionHead = (DCOP_SESSION_HEAD *)aSessHeads.Pos(sessIdx);
         if (!pSessionHead)
         {
-            return FAILURE;
+            continue;
         }
 
-        /// 获取规则节点
+        /// 根据会话获取规则节点
         ISecure::Node *pRuleNode = GetRuleNode(pSessionHead->m_attribute);
         if (!pRuleNode)
         {
-            return FAILURE;
+            continue;
         }
 
-        /// 功能函数列表
+        /// '表驱动'中的功能函数列表
         static CHECK_FUNC checkFunc[] = 
         {
             &CSecure::CheckOperatorRule,
@@ -302,10 +309,7 @@ DWORD CSecure::CheckAllRule(objMsg *pInput,
                         pOutput,
                         bContinue,
                         bCheck);
-            if (bCheck)
-            {
-                break;
-            }
+            if (bCheck) break;
         }
 
         PrintLog(STR_FORMAT("group:%d\r\n session:%d\r\n user:%d\r\n tty:%d\r\n attribute:0x%x\r\n dwRc:%d \r\n",
@@ -317,10 +321,8 @@ DWORD CSecure::CheckAllRule(objMsg *pInput,
                         dwRc), 
                         PrintToConsole, 0);
 
-        if (bCheck)
-        {
-            break;
-        }
+        /// 已经得到检查结果
+        if (bCheck) break;
     }
 
     return dwRc;
@@ -380,6 +382,16 @@ DWORD CSecure::CheckOwnerRule(DCOP_SESSION_HEAD *pSession,
                         bool &bContinue,
                         bool &bCheck)
 {
+    if (!pSession || !pRule)
+    {
+        return FAILURE;
+    }
+
+    if (pSession->m_group != DCOP_GROUP_USER)
+    {
+        return FAILURE;
+    }
+
     return FAILURE;
 }
 
@@ -398,7 +410,24 @@ DWORD CSecure::CheckVisitorRule(DCOP_SESSION_HEAD *pSession,
                         bool &bContinue,
                         bool &bCheck)
 {
-    return FAILURE;
+    if (!pSession || !pRule)
+    {
+        return FAILURE;
+    }
+
+    if (pSession->m_group != DCOP_GROUP_VISITOR)
+    {
+        return FAILURE;
+    }
+
+    if (pRule->m_ownerRight & DCOP_SECURE_RIGHT(pSession->m_ctrl))
+    {
+        return SUCCESS;
+    }
+
+    /// 没有权限，中断运行
+    bContinue = false;
+    return ERRCODE_IO_NO_RIGHT_TO_OPERATE;
 }
 
 /*******************************************************
@@ -416,6 +445,11 @@ DWORD CSecure::CheckUserRule(DCOP_SESSION_HEAD *pSession,
                         bool &bContinue,
                         bool &bCheck)
 {
+    if (!pSession || !pRule)
+    {
+        return FAILURE;
+    }
+
     return FAILURE;
 }
 
@@ -434,6 +468,57 @@ DWORD CSecure::CheckManagerRule(DCOP_SESSION_HEAD *pSession,
                         bool &bContinue,
                         bool &bCheck)
 {
+    if (!pSession || !pRule)
+    {
+        return FAILURE;
+    }
+
     return FAILURE;
+}
+
+/*******************************************************
+  函 数 名: CSecure::DumpRight
+  描    述: Dump权限
+  输    入: 
+  输    出: 
+  返    回: 
+  修改记录: 
+ *******************************************************/
+void CSecure::DumpRight(const char *pcszTitle, 
+                        LOG_PRINT logPrint, 
+                        LOG_PARA logPara, 
+                        DWORD right)
+{
+    if (!logPrint) return;
+
+    logPrint(STR_FORMAT("%s: ", pcszTitle), logPara);
+
+    static const char *Operation[] = 
+    {
+        "",
+        "Create",
+        "Destroy",
+        "Add",
+        "Del",
+        "Set",
+        "Get",
+        "Dump",
+        "Action",
+        "Event",
+    };
+
+    bool bHaveRight = false;
+    for (DWORD i = DCOP_CTRL_CREATE; i <= DCOP_CTRL_EVENT; ++i)
+    {
+        if (right & DCOP_SECURE_RIGHT(i))
+        {
+            logPrint(STR_FORMAT("%s ", Operation[i]), logPara);
+            bHaveRight = true;
+        }
+    }
+
+    if (!bHaveRight) logPrint("No Right ", logPara);
+
+    logPrint("\r\n", logPara);
 }
 
