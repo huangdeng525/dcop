@@ -97,6 +97,11 @@ private:
                         bool &bContinue,
                         bool &bCheck);
 
+    void DumpRight(const char *pcszTitle, 
+                        LOG_PRINT logPrint, 
+                        LOG_PARA logPara, 
+                        DWORD right);
+
 private:
     MAP_RULES m_rules;
     IControl *m_piControl;

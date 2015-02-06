@@ -470,7 +470,7 @@ void CAccess::OnRecv(DWORD dwChannelID,
 
 /*******************************************************
   函 数 名: CAccess::OnLogin
-  描    述: 收到登陆消息
+  描    述: 收到登录消息
   输    入: 
   输    出: 
   返    回: 
@@ -503,7 +503,7 @@ void CAccess::OnLogin(IObject *pOwner,
         return;
     }
 
-    /// 解析并处理登陆消息
+    /// 解析并处理登录消息
     char *pUserName = 0;
     char *pPassText = 0;
     IUser::NODE userNode;
@@ -699,7 +699,7 @@ void CAccess::StopLanApp()
 
 /*******************************************************
   函 数 名: CAccess::CheckLogin
-  描    述: 检查登陆
+  描    述: 检查登录
   输    入: 
   输    出: 
   返    回: 
