@@ -21,7 +21,8 @@
 class CSecure : public ISecure
 {
 public:
-    typedef DWORD (CSecure::*CHECK_FUNC)(DCOP_SESSION_HEAD *pSession,
+    typedef DWORD (CSecure::*CHECK_FUNC)(DCOP_SESSION_HEAD *pSessionHead,
+                        void *pSessionData,
                         ISecure::Node *pRule,
                         objMsg *pInput,
                         objMsg *&pOutput,
@@ -56,51 +57,60 @@ private:
                         bool &bContinue,
                         IObject *piCtrler);
 
+    void DumpRight(const char *pcszTitle, 
+                        LOG_PRINT logPrint, 
+                        LOG_PARA logPara, 
+                        DWORD right);
+
     ISecure::Node *GetRuleNode(DWORD attrID);
 
     DWORD CheckAllRule(objMsg *pInput,
                         objMsg *&pOutput,
                         bool &bContinue);
 
-    DWORD CheckOperatorRule(DCOP_SESSION_HEAD *pSession,
+    bool CheckMsgOwner(DCOP_SESSION_HEAD *pSessionHead,
+                        void *pSessionData,
+                        DWORD ownerField);
+
+    DWORD CheckOperatorRule(DCOP_SESSION_HEAD *pSessionHead,
+                        void *pSessionData,
                         ISecure::Node *pRule,
                         objMsg *pInput,
                         objMsg *&pOutput,
                         bool &bContinue,
                         bool &bCheck);
 
-    DWORD CheckOwnerRule(DCOP_SESSION_HEAD *pSession,
+    DWORD CheckOwnerRule(DCOP_SESSION_HEAD *pSessionHead,
+                        void *pSessionData,
                         ISecure::Node *pRule,
                         objMsg *pInput,
                         objMsg *&pOutput,
                         bool &bContinue,
                         bool &bCheck);
 
-    DWORD CheckVisitorRule(DCOP_SESSION_HEAD *pSession,
+    DWORD CheckVisitorRule(DCOP_SESSION_HEAD *pSessionHead,
+                        void *pSessionData,
                         ISecure::Node *pRule,
                         objMsg *pInput,
                         objMsg *&pOutput,
                         bool &bContinue,
                         bool &bCheck);
 
-    DWORD CheckUserRule(DCOP_SESSION_HEAD *pSession,
+    DWORD CheckUserRule(DCOP_SESSION_HEAD *pSessionHead,
+                        void *pSessionData,
                         ISecure::Node *pRule,
                         objMsg *pInput,
                         objMsg *&pOutput,
                         bool &bContinue,
                         bool &bCheck);
 
-    DWORD CheckManagerRule(DCOP_SESSION_HEAD *pSession,
+    DWORD CheckManagerRule(DCOP_SESSION_HEAD *pSessionHead,
+                        void *pSessionData,
                         ISecure::Node *pRule,
                         objMsg *pInput,
                         objMsg *&pOutput,
                         bool &bContinue,
                         bool &bCheck);
-
-    void DumpRight(const char *pcszTitle, 
-                        LOG_PRINT logPrint, 
-                        LOG_PARA logPara, 
-                        DWORD right);
 
 private:
     MAP_RULES m_rules;
