@@ -127,17 +127,17 @@ void CSecure::Dump(LOG_PRINT logPrint, LOG_PARA logPara, int argc, void **argv)
 
     for (IT_RULES it = m_rules.begin(); it != m_rules.end(); ++it)
     {
-        logPrint(STR_FORMAT("ownerAttr:0x%x \r\n", ((*it).second).m_ownerAttr), logPara);
-        logPrint(STR_FORMAT("    ownerField:%d \r\n", ((*it).second).m_ownerField), logPara);
+        logPrint(STR_FORMAT("ownerAttr: 0x%x \r\n", ((*it).second).m_ownerAttr), logPara);
+        logPrint(STR_FORMAT("    ownerField: %d \r\n", ((*it).second).m_ownerField), logPara);
         DumpRight("    ownerRight", logPrint, logPara, ((*it).second).m_ownerRight);
         DumpRight("    visitorRight", logPrint, logPara, ((*it).second).m_visitorRight);
-        logPrint(STR_FORMAT("    userAttr:0x%x \r\n", ((*it).second).m_userAttr), logPara);
-        logPrint(STR_FORMAT("    userField:%d \r\n", ((*it).second).m_userField), logPara);
+        logPrint(STR_FORMAT("    userAttr: 0x%x \r\n", ((*it).second).m_userAttr), logPara);
+        logPrint(STR_FORMAT("    userField: %d \r\n", ((*it).second).m_userField), logPara);
         DumpRight("    userRight", logPrint, logPara, ((*it).second).m_userRight);
-        logPrint(STR_FORMAT("    managerAttr:0x%x \r\n", ((*it).second).m_managerAttr), logPara);
-        logPrint(STR_FORMAT("    managerField:%d \r\n", ((*it).second).m_managerField), logPara);
+        logPrint(STR_FORMAT("    managerAttr: 0x%x \r\n", ((*it).second).m_managerAttr), logPara);
+        logPrint(STR_FORMAT("    managerField: %d \r\n", ((*it).second).m_managerField), logPara);
         DumpRight("    managerRight", logPrint, logPara, ((*it).second).m_managerRight);
-        logPrint(STR_FORMAT("    systemOperator:%d \r\n", ((*it).second).m_systemOperator), logPara);
+        logPrint(STR_FORMAT("    systemOperator: %d \r\n", ((*it).second).m_systemOperator), logPara);
     }
 }
 
