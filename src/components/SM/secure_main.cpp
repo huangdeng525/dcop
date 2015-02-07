@@ -307,7 +307,72 @@ bool CSecure::CheckMsgOwner(DCOP_SESSION_HEAD *pSessionHead,
                         void *pSessionData,
                         DWORD ownerField)
 {
-    
+    if (!pSessionHead || !pSessionData || !ownerField)
+    {
+        return false;
+    }
+
+    /// 获取消息中的条件参数
+    CDArray aCondHeads;
+    IObjectMember::GetMsgHead(pSessionData, pSessionHead->m_type.m_valueLen, 0, &aCondHeads, 0, 0, 0);
+
+    DCOP_CONDITION_HEAD *pCondHead = (DCOP_CONDITION_HEAD *)aCondHeads.Pos(0);
+    if (!pCondHead)
+    {
+        return false;
+    }
+
+    /// 首先确认条件字段中的参数必须是同时满足
+    if (pCondHead->m_condition == DCOP_CONDITION_ANY)
+    {
+        return false;
+    }
+
+    void *pCondParaData = *(void **)(pCondHead + 1);
+    DWORD dwCondParaCount = pCondHead->m_paraCount;
+    DWORD dwCondDataLen = pCondHead->m_paraLen;
+    if (!pCondParaData || !dwCondParaCount || !dwCondDataLen)
+    {
+        return false;
+    }
+
+    CDStream sCondPara(dwCondParaCount * sizeof(DCOP_PARA_NODE));
+    DCOP_PARA_NODE *pCondPara = (DCOP_PARA_NODE *)sCondPara.Buffer();
+    if (!pCondPara)
+    {
+        return false;
+    }
+
+    void *pCondData = IObjectMember::GetMsgParaData(pCondParaData, 
+                        dwCondParaCount, dwCondDataLen, 
+                        pCondPara);
+    if (!pCondData)
+    {
+        return false;
+    }
+
+    /// 在条件参数字段中查找owner字段
+    DWORD dwParaSize = 0;
+    DWORD dwParaOffset = 0;
+    for (DWORD i = 0; i < dwCondParaCount; ++i)
+    {
+        if ((pCondPara[i].m_paraID == ownerField) &&
+            (pCondPara[i].m_opCode == DCOP_OPCODE_EQUAL))
+        {
+            dwParaSize = pCondPara[i].m_paraSize;
+            break;
+        }
+
+        dwParaOffset += pCondPara[i].m_paraSize;
+    }
+
+    if (!dwParaSize)
+    {
+        return false;
+    }
+
+    /// 在条件参数数据中查找owner值
+    /// (BYTE *)pCondData + dwParaOffset, dwParaSize
 
     return true;
 }
