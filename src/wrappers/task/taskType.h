@@ -10,6 +10,7 @@
 
 #include "../osBase.h"
 #include "task.h"
+#include "stream/dstream.h"
 
 
 class CTaskBase : public objTask, private osBase
@@ -31,6 +32,9 @@ public:
     void SetName(const char *cszName) {osBase::vSetName(cszName);}
     void SetID(DWORD dwID) {osBase::vSetID(dwID);}
 
+    DWORD SetLocal(DWORD dwPos, void *pVal, DWORD dwLen);
+    void *GetLocal(DWORD dwPos);
+
     static DWORD Current();
 
 private:
@@ -43,6 +47,7 @@ private:
     DWORD           m_dwStackSize;
     DWORD           m_dwPriority;
     IPara *         m_pPara;
+    CDStream        m_sLocal;
 };
 
 
