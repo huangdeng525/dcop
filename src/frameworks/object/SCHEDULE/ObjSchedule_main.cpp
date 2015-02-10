@@ -296,10 +296,10 @@ DWORD CSchedule::CreateAllTask()
         m_pNodes[i].m_szTaskName[sizeof(m_pNodes[i].m_szTaskName) - 1] = '\0';
         objTask::IPara *pTaskPara = new TaskPara(this, pMsgQue, i);
         objTask *pTask = DCOP_CreateTask(m_pNodes[i].m_szTaskName,
-                    TaskEntry,
-                    1024,
-                    objTask::OSTASK_PRIORITY_NORMAL,
-                    pTaskPara);
+                        TaskEntry,
+                        1024,
+                        objTask::OSTASK_PRIORITY_NORMAL,
+                        pTaskPara);
         if (!pTask)
         {
             delete pTaskPara;
@@ -366,6 +366,9 @@ void CSchedule::TaskEntry(objTask::IPara *para)
         return;
     }
 
+    /// 设置当前系统ID到任务变量中
+    pThis->SetSystemID();
+
     objMsgQue *pMsgQue = pPara->m_pMsgQue;
     if (!pMsgQue)
     {
@@ -419,11 +422,19 @@ void CSchedule::OnRecvStart(DWORD dwIndex, DWORD dwProcObjID)
 {
     AutoObjLock(this);
 
-    if (m_pNodes && (dwIndex < m_dwNodeCount))
+    if (!m_pNodes || (dwIndex >= m_dwNodeCount))
     {
-        m_pNodes[dwIndex].m_dwInActive = DCOP_YES;
-        m_pNodes[dwIndex].m_dwLastProcObjID = dwProcObjID;
-        m_pNodes[dwIndex].m_dwLastCostTimeStart = (DWORD)(clock()/(CLOCKS_PER_SEC/1000));
+        return;
+    }
+
+    m_pNodes[dwIndex].m_dwInActive = DCOP_YES;
+    m_pNodes[dwIndex].m_dwLastProcObjID = dwProcObjID;
+    m_pNodes[dwIndex].m_dwLastCostTimeStart = (DWORD)(clock()/(CLOCKS_PER_SEC/1000));
+
+    objTask *pTask = m_pNodes[dwIndex].m_pTask;
+    if (pTask)
+    {
+        (void)pTask->SetLocal(TASK_LOCAL_HANDLER, &dwProcObjID, sizeof(dwProcObjID));
     }
 }
 
@@ -499,6 +510,13 @@ void CSchedule::OnRecvEnd(DWORD dwIndex, DWORD dwProcObjID)
     {
         m_pNodes[dwIndex].m_dwMaxCostTime = dwCostTime;
         m_pNodes[dwIndex].m_dwMaxCostObjID = dwProcObjID;
+    }
+
+    objTask *pTask = m_pNodes[dwIndex].m_pTask;
+    if (pTask)
+    {
+        DWORD dwObjID = 0;
+        (void)pTask->SetLocal(TASK_LOCAL_HANDLER, &dwObjID, sizeof(dwObjID));
     }
 }
 
@@ -677,5 +695,41 @@ void CSchedule::DelRecvObj(DWORD dwObjID, bool bOrderReach)
     {
         (void)m_recvobjs.erase(it_recv);
     }
+}
+
+/*******************************************************
+  函 数 名: CSchedule::SetSystemID
+  描    述: 设置系统ID
+  输    入: 
+  输    出: 
+  返    回: 
+  修改记录: 
+ *******************************************************/
+void CSchedule::SetSystemID()
+{
+    objTask *pTask = objTask::Current();
+    if (!pTask)
+    {
+        return;
+    }
+
+    DWORD dwSysID = 0;
+    if (m_piManager)
+    {
+        dwSysID = m_piManager->GetSystemID();
+    }
+
+    DWORD dwRc = pTask->SetLocal(TASK_LOCAL_SYSTEM, &dwSysID, sizeof(dwSysID));
+    CHECK_ERRCODE(dwRc, "Set Sys ID To Task Local");
+
+    DWORD dwObjID = ID();
+    IObject *piParent = Parent();
+    if (!dwObjID && piParent)
+    {
+        dwObjID = piParent->ID();
+    }
+
+    dwRc = pTask->SetLocal(TASK_LOCAL_HANDLER, &dwObjID, sizeof(dwObjID));
+    CHECK_ERRCODE(dwRc, "Set Obj ID To Task Local");
 }
 

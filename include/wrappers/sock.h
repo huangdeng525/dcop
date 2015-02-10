@@ -333,6 +333,10 @@ public:
 
 public:
 
+    /// 获取系统ID
+    virtual DWORD GetSystemID(
+                        ) = 0;
+
     /// 获取本端ID
     virtual DWORD GetLocalID(
                         ) = 0;
@@ -371,6 +375,7 @@ public:
     /// 启动应用
     virtual DWORD Start(
                         const char *cszAppName,
+                        DWORD dwSystemID,
                         DWORD dwLocalID,
                         DWORD dwTaskCount,
                         LanEventProc *pEventProc,

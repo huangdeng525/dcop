@@ -214,7 +214,7 @@ DWORD CTaskBase::Create(OSTASK_ENTRY pEntry,
         m_pPara = 0;
     }
 
-    TRACE_LOG(STR_FORMAT("Task '%s' Create rc:0x%x", osBase::cszGetName(), dwRc));
+    TRACE_LOG(STR_FORMAT("Task '%s'(%d) Create rc:0x%x", osBase::cszGetName(), dwID, dwRc));
 
     return dwRc;
 }
@@ -243,6 +243,49 @@ DWORD CTaskBase::Destroy()
     TRACE_LOG(STR_FORMAT("Task '%s' Destroy rc:0x%x", osBase::cszGetName(), dwRc));
 
     return dwRc;
+}
+
+/*******************************************************
+  函 数 名: CTaskBase::SetLocal
+  描    述: 设置本地变量
+  输    入: 
+  输    出: 
+  返    回: 
+  修改记录: 
+ *******************************************************/
+DWORD CTaskBase::SetLocal(DWORD dwPos, void *pVal, DWORD dwLen)
+{
+    if (!dwLen)
+    {
+        return FAILURE;
+    }
+
+    DWORD dwCurPos = m_sLocal.GetOffSet();
+    if (dwCurPos < dwPos)
+    {
+        DWORD dwRc = m_sLocal.SetNeedMemLen((dwPos - dwCurPos) + dwLen);
+        if (dwRc != SUCCESS) return dwRc;
+    }
+
+    if (pVal)
+    {
+        m_sLocal.SetOffset(dwPos) << CBufferPara(pVal, dwLen);
+    }
+
+    return SUCCESS;
+}
+
+/*******************************************************
+  函 数 名: CTaskBase::GetLocal
+  描    述: 获取本地变量
+  输    入: 
+  输    出: 
+  返    回: 
+  修改记录: 
+ *******************************************************/
+void *CTaskBase::GetLocal(DWORD dwPos)
+{
+    return m_sLocal.Buffer(dwPos);
 }
 
 /*******************************************************

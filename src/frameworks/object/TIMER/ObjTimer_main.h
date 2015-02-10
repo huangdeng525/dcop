@@ -106,6 +106,8 @@ public:
     DWORD InsertToWheel(DWORD dwTimeOut, ITimer::Handle hTimer);
     DWORD GetTimeNow(CTimerWheel *pWheel, DWORD dwCount);
 
+    void SetSystemID();
+
 private:
     IDispatch * m_piDispatch;       // 消息发送器
     objTask *   m_pTaskS;           // 秒级任务

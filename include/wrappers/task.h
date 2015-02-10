@@ -53,9 +53,18 @@ public:
     virtual const char *Name() = 0;
     virtual DWORD ID() = 0;
 
+    virtual DWORD SetLocal(DWORD dwPos, void *pVal, DWORD dwLen) = 0;
+    virtual void *GetLocal(DWORD dwPos) = 0;
+
     static void Delay(DWORD delayMilliseconds);
     static objTask *Current();
 };
+
+/// -------------------------------------------------
+/// 调度任务处理对象ID所在的任务变量位置
+/// -------------------------------------------------
+#define TASK_LOCAL_SYSTEM           0
+#define TASK_LOCAL_HANDLER          4
 
 
 /// -------------------------------------------------

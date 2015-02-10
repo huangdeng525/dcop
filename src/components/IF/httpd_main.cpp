@@ -791,8 +791,10 @@ void CHttpServer::StartLanApp()
         OnLogPrint, this
     };
 
+    IObject *piParent = Parent();
     dwRc = m_pLanApp->Start("HttpdLan",
-                        0,
+                        (piParent)? piParent->ID() : 0,
+                        ID(),
                         m_dwHttpdLanTaskCount,
                         &theEventProc,
                         &theFrameProc,

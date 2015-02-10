@@ -251,6 +251,9 @@ void CTimer::STaskEntry(objTask::IPara *para)
     CTimer *pThis = pTaskPara->m_pTimer;
     OSASSERT(pThis != 0);
 
+    /// 设置当前系统ID到任务变量中
+    pThis->SetSystemID();
+
     for (;;)
     {
         pThis->Enter();
@@ -276,6 +279,9 @@ void CTimer::MsTaskEntry(objTask::IPara *para)
 
     CTimer *pThis = pTaskPara->m_pTimer;
     OSASSERT(pThis != 0);
+
+    /// 设置当前系统ID到任务变量中
+    pThis->SetSystemID();
 
     for (;;)
     {
@@ -377,5 +383,30 @@ DWORD CTimer::GetTimeNow(CTimerWheel *pWheel, DWORD dwCount)
     }
 
     return dwTime;
+}
+
+/*******************************************************
+  函 数 名: CTimer::SetSystemID
+  描    述: 设置系统ID
+  输    入: 
+  输    出: 
+  返    回: 
+  修改记录: 
+ *******************************************************/
+void CTimer::SetSystemID()
+{
+    objTask *pTask = objTask::Current();
+    if (!pTask)
+    {
+        return;
+    }
+
+    IObject *piParent = Parent();
+    DWORD dwSysID = (piParent)? piParent->ID() : 0;
+    DWORD dwObjID = ID();
+    DWORD dwRc = pTask->SetLocal(TASK_LOCAL_SYSTEM, &dwSysID, sizeof(dwSysID));
+    CHECK_ERRCODE(dwRc, "Set Sys ID To Task Local");
+    dwRc = pTask->SetLocal(TASK_LOCAL_HANDLER, &dwObjID, sizeof(dwObjID));
+    CHECK_ERRCODE(dwRc, "Set Obj ID To Task Local");
 }
 

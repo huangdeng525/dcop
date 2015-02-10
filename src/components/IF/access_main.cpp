@@ -666,8 +666,10 @@ void CAccess::StartLanApp()
         OnLogPrint, this
     };
 
+    IObject *piParent = Parent();
     dwRc = m_pLanApp->Start("Access",
-                        0,
+                        (piParent)? piParent->ID() : 0,
+                        ID(),
                         m_dwLanTaskCount,
                         &theEventProc,
                         0,

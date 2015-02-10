@@ -95,6 +95,14 @@ DWORD CObjectManager::Init(IObject *root, int argc, void **argv)
         return FAILURE;
     }
 
+    objTask *pTask = objTask::Current();
+    DWORD dwObjID = 0;
+    if (pTask)
+    {
+        dwObjID = DCOP_OBJECT_MANAGER;
+        (void)pTask->SetLocal(TASK_LOCAL_HANDLER, &dwObjID, sizeof(dwObjID));
+    }
+
     /////////////////////////////////////////////////
     /// 先插入所有的输入对象
     /////////////////////////////////////////////////
@@ -134,6 +142,12 @@ DWORD CObjectManager::Init(IObject *root, int argc, void **argv)
         IObject *pObjTmp = ppiObject[i];
         if (!pObjTmp) continue;
 
+        if (pTask)
+        {
+            dwObjID = pObjTmp->ID();
+            (void)pTask->SetLocal(TASK_LOCAL_HANDLER, &dwObjID, sizeof(dwObjID));
+        }
+
         dwRc = pObjTmp->Init(this, 0, 0);
         if (dwRc)
         {
@@ -155,6 +169,12 @@ DWORD CObjectManager::Init(IObject *root, int argc, void **argv)
     /// 发送初始化事件
     /////////////////////////////////////////////////
     SendEvent(true);
+
+    if (pTask)
+    {
+        dwObjID = DCOP_OBJECT_KERNEL;
+        (void)pTask->SetLocal(TASK_LOCAL_HANDLER, &dwObjID, sizeof(dwObjID));
+    }
 
     return SUCCESS;
 }

@@ -122,6 +122,9 @@ void osBase::vDelFromList()
 
     AutoSpinLock(g_pOsBaseLock);
     LIST_REMOVE(&g_osBaseHead[m_osType], this, m_field);
+
+    m_osType = OSTYPE_NULL;
+    m_objPtr = NULL;
 }
 
 /*******************************************************

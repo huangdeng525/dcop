@@ -115,6 +115,8 @@ private:
     objMsgQue *GetRecvQue(DWORD dwObjID, bool bOrderReach);
     void DelRecvObj(DWORD dwObjID, bool bOrderReach);
 
+    void SetSystemID();
+
 private:
     char m_szNameConfig[OSNAME_LENGTH];
     DWORD m_dwCountConfig;
