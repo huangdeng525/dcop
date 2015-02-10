@@ -2066,8 +2066,10 @@ void CCommand::StartLanApp()
         OnLogPrint, this
     };
 
+    IObject *piParent = Parent();
     dwRc = m_pLanApp->Start("Command",
-                        0,
+                        (piParent)? piParent->ID() : 0,
+                        ID(),
                         LAN_TASK_COUNT,
                         &theEventProc,
                         &theFrameProc,
