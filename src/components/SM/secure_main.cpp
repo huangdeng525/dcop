@@ -521,6 +521,7 @@ DWORD CSecure::CheckOwnerRule(DCOP_SESSION_HEAD *pSessionHead,
         return FAILURE;
     }
 
+    /// 必须是业务层面的用户
     if (pSessionHead->m_group != DCOP_GROUP_USER)
     {
         return FAILURE;
@@ -550,12 +551,14 @@ DWORD CSecure::CheckVisitorRule(DCOP_SESSION_HEAD *pSessionHead,
         return FAILURE;
     }
 
+    /// 必须是未登录用户
     if (pSessionHead->m_group != DCOP_GROUP_VISITOR)
     {
         return FAILURE;
     }
 
-    if (pRule->m_ownerRight & DCOP_SECURE_RIGHT(pSessionHead->m_ctrl))
+    /// 检查未登录用户权限设定
+    if (pRule->m_visitorRight & DCOP_SECURE_RIGHT(pSessionHead->m_ctrl))
     {
         return SUCCESS;
     }
@@ -586,6 +589,7 @@ DWORD CSecure::CheckUserRule(DCOP_SESSION_HEAD *pSessionHead,
         return FAILURE;
     }
 
+    /// 必须是业务层面的用户
     if (pSessionHead->m_group != DCOP_GROUP_USER)
     {
         return FAILURE;
