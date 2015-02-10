@@ -32,7 +32,10 @@
 
 
 /// 尾部校验长度
-#define MEM_TAIL_CHECK_LEN 16
+#define MEM_TAIL_CHECK_LEN      16
+
+/// 内容打印最大长度
+#define MEM_DETAIL_PRINT_LEN    64
 
 
 /// 内存跟踪类

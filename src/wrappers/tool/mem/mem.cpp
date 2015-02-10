@@ -406,7 +406,7 @@ void CMemTrack::DumpMemInfo()
                         file, 
                         line), 
                         address, 
-                        ((size > 64)? 64 : size));
+                        ((size > MEM_DETAIL_PRINT_LEN)? MEM_DETAIL_PRINT_LEN : size));
             sg_pMemLog->Write(((*i).second).callstack);
         }
         totalSize += ((*i).second).size;
