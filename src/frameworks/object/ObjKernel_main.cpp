@@ -7,6 +7,7 @@
 
 #include "ObjKernel_main.h"
 #include "Factory_if.h"
+#include "BaseID.h"
 
 
 /// -------------------------------------------------
@@ -421,6 +422,22 @@ IManager *CFrameKernel::LoadAllObjects(const char *xmlFile)
     TRACE_LOG(STR_FORMAT("System('%s') LoadFile OK!", xmlFile));
 
     /////////////////////////////////////////////////
+    /// 设置系统ID到任务变量中
+    /////////////////////////////////////////////////
+    objTask *pTask = objTask::Current();
+    if (pTask)
+    {
+        DWORD dwSysID = 0;
+        const char *sysID = pXmlSystem->Attribute("id");
+        dwSysID = (sysID)? (DWORD)atoi(sysID) : 0;
+        dwRc = pTask->SetLocal(TASK_LOCAL_SYSTEM, &dwSysID, sizeof(dwSysID));
+        CHECK_ERRCODE(dwRc, "Set Sys ID To Task Local");
+        DWORD dwObjID = DCOP_OBJECT_KERNEL;
+        dwRc = pTask->SetLocal(TASK_LOCAL_HANDLER, &dwObjID, sizeof(dwObjID));
+        CHECK_ERRCODE(dwRc, "Set Obj ID To Task Local");
+    }
+
+    /////////////////////////////////////////////////
     /// 实例化对象管理器
     /////////////////////////////////////////////////
     CDArray szArgs(DCOP_STRING_ARG_LEM_MAX, DCOP_SYSTEM_ARG_MAX_COUNT);
@@ -450,6 +467,13 @@ IManager *CFrameKernel::LoadAllObjects(const char *xmlFile)
     }
 
     TRACE_LOG(STR_FORMAT("System(%d) CreateAllObjects OK!", piManager->GetSystemID()));
+
+    if (pTask)
+    {
+        DWORD dwObjID = DCOP_OBJECT_KERNEL;
+        dwRc = pTask->SetLocal(TASK_LOCAL_HANDLER, &dwObjID, sizeof(dwObjID));
+        CHECK_ERRCODE(dwRc, "Set Obj ID To Task Local");
+    }
 
     return piManager;
 }
@@ -784,6 +808,16 @@ DWORD CFrameKernel::CreateAllObjects(IManager *piManager, const XMLElement *pXML
         argc  = GetXmlAttribute (pXmlObject, szArgs);
         argc += GetXmlChildValue(pXmlObject, szArgs);
         GetArgList(argc, argv, szArgs);
+
+        /// 设置任务变量中
+        objTask *pTask = objTask::Current();
+        if (pTask)
+        {
+            DWORD dwObjID = 0;
+            const char *objID = pXmlObject->Attribute("id");
+            dwObjID = (objID)? (DWORD)atoi(objID) : 0;
+            (void)pTask->SetLocal(TASK_LOCAL_HANDLER, &dwObjID, sizeof(dwObjID));
+        }
 
         /// 如果是动态库，则先进行动态加载
         objDynamicLoader *pLoader = 0;
