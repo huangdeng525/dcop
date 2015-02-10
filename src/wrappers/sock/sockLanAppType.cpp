@@ -450,6 +450,18 @@ void CLanAppEventBus::TaskRun(objTask::IPara *para)
     CLanAppBase *pLanApp = pPara->m_pLanApp;
     OSASSERT(pLanApp != 0);
 
+    /// 设置当前任务的本地变量
+    objTask *pTask = objTask::Current();
+    if (pTask)
+    {
+        DWORD dwSystemID = pLanApp->GetSystemID();
+        DWORD dwLocalID = pLanApp->GetLocalID();
+        DWORD dwRc = pTask->SetLocal(TASK_LOCAL_SYSTEM, &dwSystemID, sizeof(dwSystemID));
+        CHECK_ERRCODE(dwRc, "Set System ID To Task Local");
+        dwRc = pTask->SetLocal(TASK_LOCAL_HANDLER, &dwLocalID, sizeof(dwLocalID));
+        CHECK_ERRCODE(dwRc, "Set Local ID To Task Local");
+    }
+
     DWORD dwNullEventCount = 0;
 
     /// 循环接收事件
@@ -799,7 +811,7 @@ CLanAppBase::~CLanAppBase()
   返    回: 
   修改记录: 
  *******************************************************/
-DWORD CLanAppBase::Init(const char *cszAppName, DWORD dwLocalID, DWORD dwTaskCount,
+DWORD CLanAppBase::Init(const char *cszAppName, DWORD dwSystemID, DWORD dwLocalID, DWORD dwTaskCount,
                         LanEventProc *pEventProc,
                         LanFrameProc *pFrameProc,
                         LanLogProc *pLogProc)
@@ -827,6 +839,7 @@ DWORD CLanAppBase::Init(const char *cszAppName, DWORD dwLocalID, DWORD dwTaskCou
             m_szAppName[sizeof(m_szAppName) - 1] = '\0';
         }
 
+        m_dwSystemID = dwSystemID;
         m_dwLocalID = dwLocalID;
         m_dwTaskCount = dwTaskCount;
 
@@ -1021,6 +1034,7 @@ void CLanAppBase::DelChannel(DWORD dwChannelID)
   修改记录: 
  *******************************************************/
 DWORD CLanAppBase::Start(const char *cszAppName,
+                        DWORD dwSystemID,
                         DWORD dwLocalID,
                         DWORD dwTaskCount,
                         LanEventProc *pEventProc,
@@ -1028,7 +1042,7 @@ DWORD CLanAppBase::Start(const char *cszAppName,
                         LanLogProc *pLogProc)
 {
     /// 初始化本对象
-    DWORD dwRc = Init(cszAppName, dwLocalID, dwTaskCount, 
+    DWORD dwRc = Init(cszAppName, dwSystemID, dwLocalID, dwTaskCount, 
                         pEventProc, 
                         pFrameProc, 
                         pLogProc);

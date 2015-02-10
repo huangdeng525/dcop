@@ -187,7 +187,7 @@ public:
                         m_pLogPrintPara);
     }
 
-    DWORD Init(const char *cszAppName, DWORD dwLocalID, DWORD dwTaskCount,
+    DWORD Init(const char *cszAppName, DWORD dwSystemID, DWORD dwLocalID, DWORD dwTaskCount,
                         LanEventProc *pEventProc,
                         LanFrameProc *pFrameProc,
                         LanLogProc *pLogProc);
@@ -254,6 +254,9 @@ public:
     /// 实现继承的虚接口 - begin
     ////////////////////////////////////////////////////
 
+    /// 获取系统ID
+    DWORD GetSystemID() {return m_dwSystemID;}
+
     /// 获取本端ID
     DWORD GetLocalID() {return m_dwLocalID;}
 
@@ -291,6 +294,7 @@ public:
 
     /// 启动应用
     DWORD Start(const char *cszAppName,
+                        DWORD dwSystemID,
                         DWORD dwLocalID,
                         DWORD dwTaskCount,
                         LanEventProc *pEventProc,
@@ -357,6 +361,7 @@ public:
 private:
     /// 配置参数
     char m_szAppName[OSNAME_LENGTH];
+    DWORD m_dwSystemID;
     DWORD m_dwLocalID;
     DWORD m_dwTaskCount;
 
