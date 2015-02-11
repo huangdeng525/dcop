@@ -145,6 +145,11 @@ extern void                 OutputMemLog(int console);
 extern void                 RecordMemDetail(int enable, int only_cur_task, const char *only_file_name);
 extern void                 RecordAllocCallstack(int enable);
 extern void                 DumpMemInfo();
+extern size_t               GetMemAllocCount();
+extern size_t               GetMemFreeCount();
+extern size_t               GetMemDoubleFreeCount();
+extern size_t               GetMemOverWriteCount();
+extern size_t               GetMemTotalSize();
 #ifdef __cplusplus
     }
 #endif

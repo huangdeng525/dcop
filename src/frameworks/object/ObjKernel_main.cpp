@@ -285,7 +285,7 @@ void CFrameKernel::Dump(LOG_PRINT logPrint, LOG_PARA logPara, int argc, void **a
             continue;
         }
 
-        logPrint(STR_FORMAT("'%s'(id:%d)[inst:%p] Be Refered(count:%d) By: \r\n", 
+        logPrint(STR_FORMAT("'%s'(id:%d) [inst:%p] Be Refered(count:%d) By: \r\n", 
                         piThis->Name(), piThis->ID(), piThis, piThis->GetRef()), logPara);
 
         Instance **ppiRefers = 0;
@@ -309,7 +309,7 @@ void CFrameKernel::Dump(LOG_PRINT logPrint, LOG_PARA logPara, int argc, void **a
                 continue;
             }
 
-            logPrint(STR_FORMAT("    '%s'(id:%d)[inst:%p](count:%d) \r\n", 
+            logPrint(STR_FORMAT("    '%s'(id:%d) \t[inst:%p] \t(count:%d) \r\n", 
                         piRefer->Name(), piRefer->ID(), piRefer, 
                         (i < dwCounterCount)? pdwReferCount[i] : 0), logPara);
         }
@@ -319,15 +319,17 @@ void CFrameKernel::Dump(LOG_PRINT logPrint, LOG_PARA logPara, int argc, void **a
 }
 
 /*******************************************************
-  函 数 名: CFrameKernel::Start
-  描    述: 整个应用实例的入口
+  函 数 名: CFrameKernel::Deploy
+  描    述: 部署一个新的系统
   输    入: cfgDeploy   - 输入的部署配置文件
   输    出: 
-  返    回: 成功或者失败的错误码
+  返    回: 该系统根对象(管理器)
   修改记录: 
  *******************************************************/
-objBase *CFrameKernel::Start(const char *cfgDeploy)
+objBase *CFrameKernel::Deploy(const char *cfgDeploy)
 {
+    DCOP_START_TIME();
+
     if (!m_pTask) m_pTask = DCOP_CreateTask("EntryTask", NULL, 0, 0, 0);
 
     /////////////////////////////////////////////////
@@ -355,28 +357,10 @@ objBase *CFrameKernel::Start(const char *cfgDeploy)
     piManager->Dump(PrintToConsole, 0, 0, 0);
     Dump(PrintToConsole, 0, 0, 0);
 
-    return piManager;
-}
+    DCOP_END_TIME();
+    PrintToConsole(STR_FORMAT("[start cost time: %d ms] \r\n", DCOP_COST_TIME()), 0);
 
-/*******************************************************
-  函 数 名: CFrameKernel::End
-  描    述: 整个应用实例的出口
-  输    入: 
-  输    出: 
-  返    回: 
-  修改记录: 
- *******************************************************/
-void CFrameKernel::End(objBase *pBase)
-{
-    /////////////////////////////////////////////////
-    /// 结束管理器内所有对象
-    /////////////////////////////////////////////////
-    IManager *piManager = (IManager *)pBase;
-    if (piManager)
-    {
-        piManager->Fini();
-        DCOP_RELEASE_INSTANCE_REFER(0, piManager);
-    }
+    return piManager;
 }
 
 /*******************************************************
@@ -809,7 +793,7 @@ DWORD CFrameKernel::CreateAllObjects(IManager *piManager, const XMLElement *pXML
         argc += GetXmlChildValue(pXmlObject, szArgs);
         GetArgList(argc, argv, szArgs);
 
-        /// 设置任务变量中
+        /// 设置加载对象ID到任务变量中
         objTask *pTask = objTask::Current();
         if (pTask)
         {

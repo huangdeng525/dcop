@@ -153,7 +153,12 @@ DWORD CHttpServer::Init(IObject *root, int argc, void **argv)
     const char *httpdProcName = "restful";
     char httpdProcID[16];
     (void)snprintf(httpdProcID, sizeof(httpdProcID), "%d", DCOP_OBJECT_RESTFUL);
-    char *httpdProcArg[] = {(char *)"-name", (char *)httpdProcName, (char *)"-id", httpdProcID, (char *)"-dir", m_szHttpdDir, (char *)"-home", m_szHttpdHome};
+    char *httpdProcArg[] = 
+    {
+        (char *)"-name", (char *)httpdProcName, 
+        (char *)"-id", httpdProcID, 
+        (char *)"-dir", m_szHttpdDir, (char *)"-home", m_szHttpdHome
+    };
     DCOP_CREATE_INSTANCE(IHttpRequest, "HttpRequest", this, 0, 0, m_pHttpRequest);
     DCOP_CREATE_INSTANCE(IHttpProcess, httpdProcName, this, ARRAY_SIZE(httpdProcArg), httpdProcArg, m_pHttpProcess);
     DCOP_CREATE_INSTANCE(IHttpResponse, "HttpResponse", this, 0, 0, m_pHttpResponse);
@@ -188,7 +193,11 @@ DWORD CHttpServer::Init(IObject *root, int argc, void **argv)
     }
 
     /// 创建HTTP处理线程池调度器
-    char *schdArg[] = {(char *)"-taskname", (char *)"HttpdProc", (char *)"-taskcount", m_szHttpdProcTaskCount};
+    char *schdArg[] = 
+    {
+        (char *)"-taskname", (char *)"HttpdProc", 
+        (char *)"-taskcount", m_szHttpdProcTaskCount
+    };
     DCOP_CREATE_INSTANCE(ISchedule, "schedule", this, ARRAY_SIZE(schdArg), schdArg, m_pHttpSchedule);
     if (!m_pHttpSchedule)
     {
@@ -1217,6 +1226,7 @@ void CHttpServer::ProcData(SessionNode &sessNode, DWORD dwMsgType, void *pFrameB
     pCopySock->vSetSock(sessNode.m_pSock->sGetSock());
     pSessNode->m_pSock = pCopySock;
 
+    pMsg->MsgHead().m_dwDstID = ID();
     if (m_pHttpSchedule->Join(pMsg) != SUCCESS)
     {
         delete pCopySock;

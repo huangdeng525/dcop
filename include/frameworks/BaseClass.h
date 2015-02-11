@@ -95,9 +95,8 @@ public:
     ///     变参使用: 实现时请按约定的顺序获取各个指针参数并输出
     virtual void Dump(LOG_PRINT logPrint, LOG_PARA logPara, int argc, void **argv) {}
 
-    /// 部署一个新的系统(使用部署配置文件)
-    virtual objBase *Start(const char *cfgDeploy) {return 0;}
-    virtual void End(objBase *pBase) {}
+    /// 部署一个新的系统(使用部署配置文件)[返回该系统根对象(管理器)]
+    virtual objBase *Deploy(const char *cfgDeploy) {return 0;}
 };
 
 

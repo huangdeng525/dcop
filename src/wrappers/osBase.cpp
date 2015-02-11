@@ -98,11 +98,11 @@ void osBase::vAddToList(DWORD osType, void *objPtr)
         return;
     }
 
-    m_osType = osType;
-    m_objPtr = objPtr;
-
     AutoSpinLock(g_pOsBaseLock);
     LIST_INSERT_HEAD(&g_osBaseHead[osType], this, m_field);
+
+    m_osType = osType;
+    m_objPtr = objPtr;
 }
 
 /*******************************************************
@@ -239,7 +239,7 @@ void osBase::Dump(LOG_PRINT logPrint, LOG_PARA logPara, int argc, void **argv)
                         PrintToConsole, 0);
     ShowCallStack(0, 0, 0);
 
-    AutoSpinLock(g_pOsBaseLock);
+    /// AutoSpinLock(g_pOsBaseLock); -- 这里使用这个和内存里获取当前任务死锁在一起了, 所以先分开用锁
 
     for (DWORD i = 0; i < OSTYPE_NUM; ++i)
     {
@@ -248,21 +248,24 @@ void osBase::Dump(LOG_PRINT logPrint, LOG_PARA logPara, int argc, void **argv)
             continue;
         }
 
+        g_osBaseLock.Lock();
         osBase *pBase = LIST_FIRST(&g_osBaseHead[i]);
+        g_osBaseLock.Unlock();
         if (!pBase)
         {
             continue;
         }
 
+        g_osBaseLock.Lock();
         DWORD dwCount = (DWORD)LIST_COUNT(&g_osBaseHead[i]);
+        g_osBaseLock.Unlock();
+
         CTableString tableStr(5, dwCount + 1, "  ");
         tableStr << "Type";
         tableStr << "Name";
         tableStr << "ID";
         tableStr << "Handle";
         tableStr << "Ptr";
-
-        DCOP_START_TIME();
 
         while (pBase)
         {
@@ -272,14 +275,20 @@ void osBase::Dump(LOG_PRINT logPrint, LOG_PARA logPara, int argc, void **argv)
             tableStr << STR_FORMAT("%d", pBase->dwGetID());
             tableStr << STR_FORMAT("%p", pBase->hGetHandle());
             tableStr << STR_FORMAT("%p", pBase->objGetPtr());
-            pBase = LIST_NEXT(pBase, m_field);
-        }
 
-        DCOP_END_TIME();
+            g_osBaseLock.Lock();
+            pBase = LIST_NEXT(pBase, m_field);
+            g_osBaseLock.Unlock();
+        }
 
         logPrint(STR_FORMAT("%s Dump: (Count: %d) \r\n", OSTYPE_INFO[i], dwCount), logPara);
         tableStr.Show(logPrint, logPara, "=", "-");
-        logPrint(STR_FORMAT("[cost time: %d ms] \r\n", DCOP_COST_TIME()), logPara);
+
+        logPrint(STR_FORMAT("mem       alloc count: %d \r\n", GetMemAllocCount()), logPara);
+        logPrint(STR_FORMAT("mem        free count: %d \r\n", GetMemFreeCount()), logPara);
+        logPrint(STR_FORMAT("mem double free count: %d \r\n", GetMemDoubleFreeCount()), logPara);
+        logPrint(STR_FORMAT("mem  over write count: %d \r\n", GetMemOverWriteCount()), logPara);
+        logPrint(STR_FORMAT("mem        total size: %d \r\n", GetMemTotalSize()), logPara);
     }
 }
 

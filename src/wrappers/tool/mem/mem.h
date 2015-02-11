@@ -37,6 +37,9 @@
 /// 内容打印最大长度
 #define MEM_DETAIL_PRINT_LEN    64
 
+/// 时间字符串长度
+#define MEM_TIME_STRING_LEN     24
+
 
 /// 内存跟踪类
 class CMemTrack
@@ -50,7 +53,11 @@ public:
         size_t size;
         const char *file;
         int line;
+        DWORD system;
+        DWORD handler;
         CDString callstack;
+        time_t time;
+        clock_t clock;
     }MEM_INFO;
 
     /// 内存信息记录容器
@@ -90,10 +97,20 @@ public:
     bool GetRecordDetail(const char *file);
 
     /// 设置是否记录分配调用栈
-    void SetRecordAllocCallstack(bool enable) {m_record_alloc_callstack = enable;}
+    void SetRecordAllocCallstack(bool enable) {AutoLock(m_pLock); m_record_alloc_callstack = enable;}
+
+    /// 获取时间字符串
+    void GetTimeStr(const time_t &time, const clock_t &clock, char *szStr, int strLen);
 
     /// 打印内存信息
     void DumpMemInfo();
+
+    /// 获取内存信息
+    size_t GetMemAllocCount() {AutoLock(m_pLock); return m_alloc_count;}
+    size_t GetMemFreeCount() {AutoLock(m_pLock); return m_free_count;}
+    size_t GetMemDoubleFreeCount() {AutoLock(m_pLock); return m_double_free_count;}
+    size_t GetMemOverWriteCount() {AutoLock(m_pLock); return m_over_write_count;}
+    size_t GetMemTotalSize() {AutoLock(m_pLock); return m_mem_count;}
 
 public:
     static int m_record_status;
@@ -101,10 +118,11 @@ public:
 private:
     MAP_ALLOC m_track_alloc_info;
     MAP_ALLOC m_track_free_info;
-    int m_alloc_count;
-    int m_free_count;
-    int m_repeat_free_count;
-    int m_over_write_count;
+    size_t m_alloc_count;
+    size_t m_free_count;
+    size_t m_double_free_count;
+    size_t m_over_write_count;
+    size_t m_mem_count;
     objLock *m_pLock;
     int m_track_inside;
     bool m_record_detail;
