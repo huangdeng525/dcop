@@ -26,7 +26,10 @@ public:
 private:
     void Initialize(const char *file, int line);
     void Delete();
-    
+
+private:
+    DWORD m_dwCount;
+    DWORD m_dwOwner;
 };
 
 /// ÊÂ¼þ

@@ -7,6 +7,7 @@
 
 #include "semType.h"
 #include "semApi.h"
+#include "task.h"
 
 
 /*******************************************************
@@ -46,6 +47,9 @@ objLock::~objLock()
  *******************************************************/
 CLockBase::CLockBase(const char *file, int line)
 {
+    m_dwCount = 0;
+    m_dwOwner = 0;
+
     Initialize(file, line);
 }
 
@@ -73,6 +77,9 @@ CLockBase::~CLockBase()
 void CLockBase::Enter()
 {
     OS_VDFUNC_CALL(Lock, Enter)(osBase::hGetHandle());
+    m_dwCount++;
+    objTask *pTask = objTask::Current();
+    m_dwOwner = (pTask)? pTask->ID() : 0;
 }
 
 /*******************************************************
@@ -86,6 +93,8 @@ void CLockBase::Enter()
 void CLockBase::Leave()
 {
     OS_VDFUNC_CALL(Lock, Leave)(osBase::hGetHandle());
+    if (m_dwCount) m_dwCount--;
+    m_dwOwner = 0;
 }
 
 /*******************************************************
