@@ -32,8 +32,9 @@ CMemTrack::CMemTrack()
 
     m_alloc_count = 0;
     m_free_count = 0;
-    m_repeat_free_count = 0;
+    m_double_free_count = 0;
     m_over_write_count = 0;
+    m_mem_count = 0;
     m_pLock = 0;
     m_track_inside = 0;
     m_record_detail = false;
@@ -148,23 +149,43 @@ void CMemTrack::AddTrack(void *address, size_t size, const char *file, int line)
 
     file = GetFileName(file);
 
+    /// 获取当前操作者
+    DWORD system = 0;
+    DWORD handler = 0;
+    objTask *pTask = objTask::Current();
+    if (pTask)
+    {
+        DWORD *pdwSystemID = (DWORD *)pTask->GetLocal(TASK_LOCAL_SYSTEM);
+        if (pdwSystemID) system = *pdwSystemID;
+        DWORD *pdwHandlerID = (DWORD *)pTask->GetLocal(TASK_LOCAL_HANDLER);
+        if (pdwHandlerID) handler = *pdwHandlerID;
+    }
+
+    /// 详细记录
     if (sg_pMemLog && GetRecordDetail(file))
     {
         objTask *pTask = objTask::Current();
-        sg_pMemLog->Write(STR_FORMAT(" ADDRESS '%p' (len:%d) Alloc in %s:%d, curTask:'%s'(%d). \r\n",
+        sg_pMemLog->Write(STR_FORMAT(" ADDRESS '%p' (len:%d) Alloc in %s:%d (handler:%d/%d), curTask:'%s'(%d). \r\n",
                         address,
                         size,
                         file,
                         line,
+                        system,
+                        handler,
                         (pTask)? pTask->Name() : "Null",
                         (pTask)? pTask->ID() : 0));
     }
 
+    /// 内存信息结构
     MEM_INFO info;
     info.address = address;
     info.size = size;
     info.file = file;
     info.line = line;
+    info.system = system;
+    info.handler = handler;
+    time(&info.time);
+    info.clock = clock();
 
     /// 尾部校验
     for(int i = 0; i < (int)(MEM_TAIL_CHECK_LEN/sizeof(DWORD)); ++i)
@@ -175,11 +196,14 @@ void CMemTrack::AddTrack(void *address, size_t size, const char *file, int line)
     /// 申请记录到map容器
     m_alloc_count++;
     IT_ALLOC it = m_track_alloc_info.insert(m_track_alloc_info.end(), MAP_ALLOC::value_type(address, info));
-    if ((it != m_track_alloc_info.end()) && m_record_alloc_callstack)
+    if ((it != m_track_alloc_info.end()) && (m_record_alloc_callstack || (!system && !handler)))
     {
         ShowCallStack(CDString::Print, &(((*it).second).callstack), 0);
     }
     (void)m_track_free_info.erase(address);
+
+    /// 计算总大小
+    m_mem_count += size;
 
     m_track_inside = 0;
 };
@@ -226,16 +250,33 @@ void CMemTrack::RemoveTrack(void *address, const char *file, int line)
 
     file = GetFileName(file);
 
+    /// 获取当前操作者
+    DWORD system = 0;
+    DWORD handler = 0;
+    objTask *pTask = objTask::Current();
+    if (pTask)
+    {
+        DWORD *pdwSystemID = (DWORD *)pTask->GetLocal(TASK_LOCAL_SYSTEM);
+        if (pdwSystemID) system = *pdwSystemID;
+        DWORD *pdwHandlerID = (DWORD *)pTask->GetLocal(TASK_LOCAL_HANDLER);
+        if (pdwHandlerID) handler = *pdwHandlerID;
+    }
+
+    /// 详细记录
     if (sg_pMemLog && GetRecordDetail(file))
     {
         objTask *pTask = objTask::Current();
-        sg_pMemLog->Write(STR_FORMAT(" ADDRESS '%p' Free in %s:%d, curTask:'%s'(%d). \r\n",
+        sg_pMemLog->Write(STR_FORMAT(" ADDRESS '%p' Free in %s:%d (handler:%d/%d), curTask:'%s'(%d). \r\n",
                         address,
                         file,
                         line,
+                        system,
+                        handler,
                         (pTask)? pTask->Name() : "Null",
                         (pTask)? pTask->ID() : 0));
     }
+
+    char timeStr[MEM_TIME_STRING_LEN];
 
     /// 从申请容器中查找记录
     IT_ALLOC it = m_track_alloc_info.find(address);
@@ -246,14 +287,18 @@ void CMemTrack::RemoveTrack(void *address, const char *file, int line)
         if (it != m_track_free_info.end())
         {
             /// 释放有记录，说明是重复释放
-            m_repeat_free_count++;
+            m_double_free_count++;
             if (sg_pMemLog)
             {
-                sg_pMemLog->Write(STR_FORMAT(" ADDRESS '%p' %d bytes doublefreed! Previously free in %s:%d, Currently free in %s:%d. \r\n", 
+                GetTimeStr(((*it).second).time, ((*it).second).clock, timeStr, sizeof(timeStr));
+                sg_pMemLog->Write(STR_FORMAT(" ADDRESS '%p' %d bytes doublefreed! Previously free in %s:%d (handler:%d/%d, time:%s), Currently free in %s:%d. \r\n", 
                         ((*it).second).address, 
                         ((*it).second).size, 
                         ((*it).second).file, 
                         ((*it).second).line, 
+                        ((*it).second).system,
+                        ((*it).second).handler,
+                        timeStr,
                         file, 
                         line));
                 ShowCallStack(CLog::PrintCallBack, sg_pMemLog, 0);
@@ -274,13 +319,19 @@ void CMemTrack::RemoveTrack(void *address, const char *file, int line)
             m_over_write_count++;
             if (sg_pMemLog)
             {
-                sg_pMemLog->Write(STR_FORMAT(" ADDRESS '%p' %d bytes overwrited! Alloc in %s:%d, Free in %s:%d. \r\n", 
+                GetTimeStr(((*it).second).time, ((*it).second).clock, timeStr, sizeof(timeStr));
+                sg_pMemLog->Write(STR_FORMAT(" ADDRESS '%p' %d bytes overwrited! Alloc in %s:%d (handler:%d/%d, time:%s), Free in %s:%d (handler:%d/%d). \r\n", 
                         ((*it).second).address, 
                         ((*it).second).size, 
                         ((*it).second).file, 
                         ((*it).second).line, 
+                        ((*it).second).system, 
+                        ((*it).second).handler, 
+                        timeStr, 
                         file, 
-                        line), 
+                        line,
+                        system,
+                        handler), 
                         (char *)address + ((*it).second).size, 
                         MEM_TAIL_CHECK_LEN, 
                         0, 
@@ -298,6 +349,22 @@ void CMemTrack::RemoveTrack(void *address, const char *file, int line)
         ((*it).second).line = line;
     }
 
+    ((*it).second).system = system;
+    ((*it).second).handler = handler;
+    time(&(((*it).second).time));
+    ((*it).second).clock = clock();
+
+    /// 计算总大小
+    if (m_mem_count > ((*it).second).size)
+    {
+        m_mem_count -= ((*it).second).size;
+    }
+    else
+    {
+        m_mem_count = 0;
+    }
+
+    /// 从map容器中删除记录
     m_free_count++;
     m_track_free_info.insert(MAP_ALLOC::value_type(address, (*it).second));
     m_track_alloc_info.erase(address);
@@ -315,6 +382,8 @@ void CMemTrack::RemoveTrack(void *address, const char *file, int line)
  *******************************************************/
 void CMemTrack::SetRecordDetail(bool enable, bool only_cur_task, const char *only_file_name)
 {
+    AutoLock(m_pLock);
+
     m_record_detail = enable;
 
     if (only_cur_task)
@@ -349,6 +418,8 @@ void CMemTrack::SetRecordDetail(bool enable, bool only_cur_task, const char *onl
  *******************************************************/
 bool CMemTrack::GetRecordDetail(const char *file)
 {
+    AutoLock(m_pLock);
+
     if (!m_record_detail)
     {
         return false;
@@ -374,6 +445,26 @@ bool CMemTrack::GetRecordDetail(const char *file)
 }
 
 /*******************************************************
+  函 数 名: CMemTrack::GetTimeStr
+  描    述: 获取时间字符串
+  输    入: 
+  输    出: 
+  返    回: 
+  修改记录: 
+ *******************************************************/
+void CMemTrack::GetTimeStr(const time_t &time, const clock_t &clock, char *szStr, int strLen)
+{
+    struct tm *newtime = localtime(&time);
+
+    (void)snprintf(szStr, strLen, "'%02d-%02d %02d:%02d:%02d.%03d'", 
+        newtime->tm_mon + 1, newtime->tm_mday, 
+        newtime->tm_hour, newtime->tm_min, newtime->tm_sec, 
+        int(clock/(CLOCKS_PER_SEC/1000)) % 1000);
+
+    szStr[strLen - 1] = '\0';
+}
+
+/*******************************************************
   函 数 名: CMemTrack::DumpMemInfo
   描    述: 打印内存信息
   输    入: 
@@ -392,24 +483,31 @@ void CMemTrack::DumpMemInfo()
     pos += snprintf(szStr+pos, sizeof(szStr)-pos-1, "DumpMemInfo ... \r\n");
     if (sg_pMemLog) sg_pMemLog->Write(szStr);
 
-    for(IT_ALLOC i = m_track_alloc_info.begin(); i != m_track_alloc_info.end(); i++)
+    for(IT_ALLOC it = m_track_alloc_info.begin(); it != m_track_alloc_info.end(); it++)
     {
         if (sg_pMemLog)
         {
-            void *address = ((*i).second).address;
-            size_t size = ((*i).second).size;
-            const char *file = ((*i).second).file;
-            int line = ((*i).second).line;
-            sg_pMemLog->Write(STR_FORMAT(" ADDRESS '%p' %d bytes unfreed! Alloc in %s:%d. \r\n", 
+            void *address = ((*it).second).address;
+            size_t size = ((*it).second).size;
+            const char *file = ((*it).second).file;
+            int line = ((*it).second).line;
+            DWORD system = ((*it).second).system;
+            DWORD handler = ((*it).second).handler;
+            char timeStr[MEM_TIME_STRING_LEN];
+            GetTimeStr(((*it).second).time, ((*it).second).clock, timeStr, sizeof(timeStr));
+            sg_pMemLog->Write(STR_FORMAT(" ADDRESS '%p' %d bytes unfreed! Alloc in %s:%d (handler:%d/%d, time:%s). \r\n", 
                         address, 
                         size, 
                         file, 
-                        line), 
+                        line, 
+                        system, 
+                        handler, 
+                        timeStr), 
                         address, 
                         ((size > MEM_DETAIL_PRINT_LEN)? MEM_DETAIL_PRINT_LEN : size));
-            sg_pMemLog->Write(((*i).second).callstack);
+            sg_pMemLog->Write(((*it).second).callstack);
         }
-        totalSize += ((*i).second).size;
+        totalSize += ((*it).second).size;
     }
 
     if (sg_pMemLog)
@@ -419,8 +517,8 @@ void CMemTrack::DumpMemInfo()
         sg_pMemLog->Write(STR_FORMAT("            Alloc: %d times \r\n", m_alloc_count));
         sg_pMemLog->Write(STR_FORMAT("             Free: %d times \r\n", m_free_count));
         sg_pMemLog->Write(STR_FORMAT("             Leak: %d times \r\n", m_track_alloc_info.size()));
-        sg_pMemLog->Write(STR_FORMAT("           Repeat: %d times \r\n", m_repeat_free_count));
-        sg_pMemLog->Write(STR_FORMAT("             Over: %d times \r\n", m_over_write_count));
+        sg_pMemLog->Write(STR_FORMAT("      Double Free: %d times \r\n", m_double_free_count));
+        sg_pMemLog->Write(STR_FORMAT("       Over Write: %d times \r\n", m_over_write_count));
         sg_pMemLog->Write(STR_FORMAT("\r\n"));
     }
 }
@@ -590,5 +688,70 @@ void RecordAllocCallstack(int enable)
 void DumpMemInfo()
 {
     g_mem_track.DumpMemInfo();
+}
+
+/*******************************************************
+  函 数 名: GetMemAllocCount
+  描    述: 获取内存申请次数
+  输    入: 
+  输    出: 
+  返    回: 
+  修改记录: 
+ *******************************************************/
+size_t GetMemAllocCount()
+{
+    return g_mem_track.GetMemAllocCount();
+}
+
+/*******************************************************
+  函 数 名: GetMemFreeCount
+  描    述: 获取内存释放次数
+  输    入: 
+  输    出: 
+  返    回: 
+  修改记录: 
+ *******************************************************/
+size_t GetMemFreeCount()
+{
+    return g_mem_track.GetMemFreeCount();
+}
+
+/*******************************************************
+  函 数 名: GetMemDoubleFreeCount
+  描    述: 获取内存重复释放次数
+  输    入: 
+  输    出: 
+  返    回: 
+  修改记录: 
+ *******************************************************/
+size_t GetMemDoubleFreeCount()
+{
+    return g_mem_track.GetMemDoubleFreeCount();
+}
+
+/*******************************************************
+  函 数 名: GetMemOverWriteCount
+  描    述: 获取内存写越界次数
+  输    入: 
+  输    出: 
+  返    回: 
+  修改记录: 
+ *******************************************************/
+size_t GetMemOverWriteCount()
+{
+    return g_mem_track.GetMemOverWriteCount();
+}
+
+/*******************************************************
+  函 数 名: GetMemTotalSize
+  描    述: 获取内存总大小
+  输    入: 
+  输    出: 
+  返    回: 
+  修改记录: 
+ *******************************************************/
+size_t GetMemTotalSize()
+{
+    return g_mem_track.GetMemTotalSize();
 }
 
