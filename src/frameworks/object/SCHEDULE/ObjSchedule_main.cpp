@@ -515,7 +515,13 @@ void CSchedule::OnRecvEnd(DWORD dwIndex, DWORD dwProcObjID)
     objTask *pTask = m_pNodes[dwIndex].m_pTask;
     if (pTask)
     {
-        DWORD dwObjID = 0;
+        DWORD dwObjID = ID();
+        IObject *piParent = Parent();
+        if (!dwObjID && piParent)
+        {
+            dwObjID = piParent->ID();
+        }
+
         (void)pTask->SetLocal(TASK_LOCAL_HANDLER, &dwObjID, sizeof(dwObjID));
     }
 }
