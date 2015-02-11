@@ -88,8 +88,7 @@ public:
 
     void Dump(LOG_PRINT logPrint, LOG_PARA logPara, int argc, void **argv);
 
-    objBase *Start(const char *cfgDeploy);
-    void End(objBase *pBase);
+    objBase *Deploy(const char *cfgDeploy);
 
 public:
     IManager *LoadAllObjects(const char *xmlFile);
