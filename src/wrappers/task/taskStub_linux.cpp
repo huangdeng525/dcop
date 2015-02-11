@@ -90,6 +90,7 @@ DWORD STUB_TaskDestroy(OSHANDLE Handle,
     else
     {
         (void)pthread_cancel(a_thread);
+        (void)pthread_join(a_thread, NULL);
     }
 
     return SUCCESS;
