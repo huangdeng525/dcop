@@ -50,9 +50,11 @@ public:
                         int line);
     virtual ~objTask() = 0;
 
+    /// 获取名字和ID
     virtual const char *Name() = 0;
     virtual DWORD ID() = 0;
 
+    /// 设置和获取任务变量
     virtual DWORD SetLocal(DWORD dwPos, void *pVal, DWORD dwLen) = 0;
     virtual void *GetLocal(DWORD dwPos) = 0;
 
