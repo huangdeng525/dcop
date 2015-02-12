@@ -86,6 +86,9 @@ public:
     /// 获取文件路径名中的名字
     static const char *GetFileName(const char *file);
 
+    /// 获取时间字符串
+    static void GetTimeStr(const time_t &time, const clock_t &clock, char *szStr, int strLen);
+
     /// 内存申请时的轨迹
     void AddTrack(void *address, size_t size, const char *file, int line);
 
@@ -98,9 +101,6 @@ public:
 
     /// 设置是否记录分配调用栈
     void SetRecordAllocCallstack(bool enable) {AutoLock(m_pLock); m_record_alloc_callstack = enable;}
-
-    /// 获取时间字符串
-    void GetTimeStr(const time_t &time, const clock_t &clock, char *szStr, int strLen);
 
     /// 打印内存信息
     void DumpMemInfo();

@@ -157,7 +157,8 @@ DWORD CHttpServer::Init(IObject *root, int argc, void **argv)
     {
         (char *)"-name", (char *)httpdProcName, 
         (char *)"-id", httpdProcID, 
-        (char *)"-dir", m_szHttpdDir, (char *)"-home", m_szHttpdHome
+        (char *)"-dir", m_szHttpdDir, 
+        (char *)"-home", m_szHttpdHome
     };
     DCOP_CREATE_INSTANCE(IHttpRequest, "HttpRequest", this, 0, 0, m_pHttpRequest);
     DCOP_CREATE_INSTANCE(IHttpProcess, httpdProcName, this, ARRAY_SIZE(httpdProcArg), httpdProcArg, m_pHttpProcess);
