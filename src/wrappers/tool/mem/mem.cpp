@@ -11,6 +11,12 @@
 
 
 /// -------------------------------------------------
+/// 内存申请和释放回调
+/// -------------------------------------------------
+void (*g_mem_alloc_callback)(CMemTrack::MEM_INFO *alloc_info) = 0;
+void (*g_mem_free_callback)(CMemTrack::MEM_INFO *alloc_info, const char *file, int line, DWORD system, DWORD handler) = 0;
+
+/// -------------------------------------------------
 /// 全局内存调试接口
 /// -------------------------------------------------
 CMemTrack g_mem_track;
@@ -126,6 +132,26 @@ const char *CMemTrack::GetFileName(const char *file)
 }
 
 /*******************************************************
+  函 数 名: CMemTrack::GetTimeStr
+  描    述: 获取时间字符串
+  输    入: 
+  输    出: 
+  返    回: 
+  修改记录: 
+ *******************************************************/
+void CMemTrack::GetTimeStr(const time_t &time, const clock_t &clock, char *szStr, int strLen)
+{
+    struct tm *newtime = localtime(&time);
+
+    (void)snprintf(szStr, strLen, "'%02d-%02d %02d:%02d:%02d.%03d'", 
+        newtime->tm_mon + 1, newtime->tm_mday, 
+        newtime->tm_hour, newtime->tm_min, newtime->tm_sec, 
+        int(clock/(CLOCKS_PER_SEC/1000)) % 1000);
+
+    szStr[strLen - 1] = '\0';
+}
+
+/*******************************************************
   函 数 名: CMemTrack::AddTrack
   描    述: 添加轨迹
   输    入: 
@@ -165,7 +191,7 @@ void CMemTrack::AddTrack(void *address, size_t size, const char *file, int line)
     if (sg_pMemLog && GetRecordDetail(file))
     {
         objTask *pTask = objTask::Current();
-        sg_pMemLog->Write(STR_FORMAT(" ADDRESS '%p' (len:%d) Alloc in %s:%d (handler:%d/%d), curTask:'%s'(%d). \r\n",
+        sg_pMemLog->Write(STR_FORMAT("ADDRESS '%p' (len:%d) Alloc in %s:%d (handler:%d/%d), curTask:'%s'(%d). \r\n",
                         address,
                         size,
                         file,
@@ -202,6 +228,9 @@ void CMemTrack::AddTrack(void *address, size_t size, const char *file, int line)
     }
     (void)m_track_free_info.erase(address);
 
+    /// 调用回调
+    if (g_mem_alloc_callback) g_mem_alloc_callback(&info);
+
     /// 计算总大小
     m_mem_count += size;
 
@@ -224,7 +253,7 @@ void CMemTrack::RemoveTrack(void *address, const char *file, int line)
     {
         if (sg_pMemLog)
         {
-            sg_pMemLog->Write(STR_FORMAT(" ADDRESS '%p' is removed after record over! Free in %s:%d. \r\n", 
+            sg_pMemLog->Write(STR_FORMAT("ADDRESS '%p' is removed after record over! Free in %s:%d. \r\n", 
                         address, 
                         GetFileName(file), 
                         line));
@@ -266,7 +295,7 @@ void CMemTrack::RemoveTrack(void *address, const char *file, int line)
     if (sg_pMemLog && GetRecordDetail(file))
     {
         objTask *pTask = objTask::Current();
-        sg_pMemLog->Write(STR_FORMAT(" ADDRESS '%p' Free in %s:%d (handler:%d/%d), curTask:'%s'(%d). \r\n",
+        sg_pMemLog->Write(STR_FORMAT("ADDRESS '%p' Free in %s:%d (handler:%d/%d), curTask:'%s'(%d). \r\n",
                         address,
                         file,
                         line,
@@ -291,7 +320,7 @@ void CMemTrack::RemoveTrack(void *address, const char *file, int line)
             if (sg_pMemLog)
             {
                 GetTimeStr(((*it).second).time, ((*it).second).clock, timeStr, sizeof(timeStr));
-                sg_pMemLog->Write(STR_FORMAT(" ADDRESS '%p' %d bytes doublefreed! Previously free in %s:%d (handler:%d/%d, time:%s), Currently free in %s:%d. \r\n", 
+                sg_pMemLog->Write(STR_FORMAT("ADDRESS '%p' %d bytes doublefreed! Previously free in %s:%d (handler:%d/%d, time:%s), Currently free in %s:%d (handler:%d/%d). \r\n", 
                         ((*it).second).address, 
                         ((*it).second).size, 
                         ((*it).second).file, 
@@ -300,7 +329,9 @@ void CMemTrack::RemoveTrack(void *address, const char *file, int line)
                         ((*it).second).handler,
                         timeStr,
                         file, 
-                        line));
+                        line, 
+                        system, 
+                        handler));
                 ShowCallStack(CLog::PrintCallBack, sg_pMemLog, 0);
             }
         }
@@ -309,6 +340,9 @@ void CMemTrack::RemoveTrack(void *address, const char *file, int line)
         
         return;
     }
+
+    /// 调用回调
+    if (g_mem_free_callback) g_mem_free_callback(&((*it).second), file, line, system, handler);
 
     /// 尾部校验
     for(int i = 0; i < (int)(MEM_TAIL_CHECK_LEN/sizeof(DWORD)); ++i)
@@ -320,7 +354,7 @@ void CMemTrack::RemoveTrack(void *address, const char *file, int line)
             if (sg_pMemLog)
             {
                 GetTimeStr(((*it).second).time, ((*it).second).clock, timeStr, sizeof(timeStr));
-                sg_pMemLog->Write(STR_FORMAT(" ADDRESS '%p' %d bytes overwrited! Alloc in %s:%d (handler:%d/%d, time:%s), Free in %s:%d (handler:%d/%d). \r\n", 
+                sg_pMemLog->Write(STR_FORMAT("ADDRESS '%p' %d bytes overwrited! Alloc in %s:%d (handler:%d/%d, time:%s), Free in %s:%d (handler:%d/%d). \r\n", 
                         ((*it).second).address, 
                         ((*it).second).size, 
                         ((*it).second).file, 
@@ -445,26 +479,6 @@ bool CMemTrack::GetRecordDetail(const char *file)
 }
 
 /*******************************************************
-  函 数 名: CMemTrack::GetTimeStr
-  描    述: 获取时间字符串
-  输    入: 
-  输    出: 
-  返    回: 
-  修改记录: 
- *******************************************************/
-void CMemTrack::GetTimeStr(const time_t &time, const clock_t &clock, char *szStr, int strLen)
-{
-    struct tm *newtime = localtime(&time);
-
-    (void)snprintf(szStr, strLen, "'%02d-%02d %02d:%02d:%02d.%03d'", 
-        newtime->tm_mon + 1, newtime->tm_mday, 
-        newtime->tm_hour, newtime->tm_min, newtime->tm_sec, 
-        int(clock/(CLOCKS_PER_SEC/1000)) % 1000);
-
-    szStr[strLen - 1] = '\0';
-}
-
-/*******************************************************
   函 数 名: CMemTrack::DumpMemInfo
   描    述: 打印内存信息
   输    入: 
@@ -495,7 +509,7 @@ void CMemTrack::DumpMemInfo()
             DWORD handler = ((*it).second).handler;
             char timeStr[MEM_TIME_STRING_LEN];
             GetTimeStr(((*it).second).time, ((*it).second).clock, timeStr, sizeof(timeStr));
-            sg_pMemLog->Write(STR_FORMAT(" ADDRESS '%p' %d bytes unfreed! Alloc in %s:%d (handler:%d/%d, time:%s). \r\n", 
+            sg_pMemLog->Write(STR_FORMAT("ADDRESS '%p' %d bytes unfreed! Alloc in %s:%d (handler:%d/%d, time:%s). \r\n", 
                         address, 
                         size, 
                         file, 
