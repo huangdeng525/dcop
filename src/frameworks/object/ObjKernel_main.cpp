@@ -309,8 +309,10 @@ void CFrameKernel::Dump(LOG_PRINT logPrint, LOG_PARA logPara, int argc, void **a
                 continue;
             }
 
+            const char *pcszReferName = piRefer->Name();
+            if (!pcszReferName || !(*pcszReferName)) pcszReferName = "null";
             logPrint(STR_FORMAT("    '%s'(id:%d) \t[inst:%p] \t(count:%d) \r\n", 
-                        piRefer->Name(), piRefer->ID(), piRefer, 
+                        pcszReferName, piRefer->ID(), piRefer, 
                         (i < dwCounterCount)? pdwReferCount[i] : 0), logPara);
         }
     }
