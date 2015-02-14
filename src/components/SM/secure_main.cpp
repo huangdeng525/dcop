@@ -296,88 +296,6 @@ ISecure::Node *CSecure::GetRuleNode(DWORD attrID)
 }
 
 /*******************************************************
-  函 数 名: CSecure::CheckMsgOwner
-  描    述: 检查消息中的owner字段
-  输    入: 
-  输    出: 
-  返    回: 
-  修改记录: 
- *******************************************************/
-bool CSecure::CheckMsgOwner(DCOP_SESSION_HEAD *pSessionHead,
-                        void *pSessionData,
-                        DWORD ownerField)
-{
-    if (!pSessionHead || !pSessionData || !ownerField)
-    {
-        return false;
-    }
-
-    /// 获取消息中的条件参数
-    CDArray aCondHeads;
-    IObjectMember::GetMsgHead(pSessionData, pSessionHead->m_type.m_valueLen, 0, &aCondHeads, 0, 0, 0);
-
-    DCOP_CONDITION_HEAD *pCondHead = (DCOP_CONDITION_HEAD *)aCondHeads.Pos(0);
-    if (!pCondHead)
-    {
-        return false;
-    }
-
-    /// 首先确认条件字段中的参数必须是同时满足
-    if (pCondHead->m_condition == DCOP_CONDITION_ANY)
-    {
-        return false;
-    }
-
-    void *pCondParaData = *(void **)(pCondHead + 1);
-    DWORD dwCondParaCount = pCondHead->m_paraCount;
-    DWORD dwCondDataLen = pCondHead->m_paraLen;
-    if (!pCondParaData || !dwCondParaCount || !dwCondDataLen)
-    {
-        return false;
-    }
-
-    CDStream sCondPara(dwCondParaCount * sizeof(DCOP_PARA_NODE));
-    DCOP_PARA_NODE *pCondPara = (DCOP_PARA_NODE *)sCondPara.Buffer();
-    if (!pCondPara)
-    {
-        return false;
-    }
-
-    void *pCondData = IObjectMember::GetMsgParaData(pCondParaData, 
-                        dwCondParaCount, dwCondDataLen, 
-                        pCondPara);
-    if (!pCondData)
-    {
-        return false;
-    }
-
-    /// 在条件参数字段中查找owner字段
-    DWORD dwParaSize = 0;
-    DWORD dwParaOffset = 0;
-    for (DWORD i = 0; i < dwCondParaCount; ++i)
-    {
-        if ((pCondPara[i].m_paraID == ownerField) &&
-            (pCondPara[i].m_opCode == DCOP_OPCODE_EQUAL))
-        {
-            dwParaSize = pCondPara[i].m_paraSize;
-            break;
-        }
-
-        dwParaOffset += pCondPara[i].m_paraSize;
-    }
-
-    if (!dwParaSize)
-    {
-        return false;
-    }
-
-    /// 在条件参数数据中查找owner值
-    /// (BYTE *)pCondData + dwParaOffset, dwParaSize
-
-    return true;
-}
-
-/*******************************************************
   函 数 名: CSecure::CheckAllRule
   描    述: 检查所有规则
   输    入: 
@@ -420,8 +338,8 @@ DWORD CSecure::CheckAllRule(objMsg *pInput,
         static CHECK_FUNC checkFunc[] = 
         {
             &CSecure::CheckOperatorRule,
-            &CSecure::CheckOwnerRule,
             &CSecure::CheckVisitorRule,
+            &CSecure::CheckOwnerRule,
             &CSecure::CheckUserRule,
             &CSecure::CheckManagerRule,
         };
@@ -487,10 +405,52 @@ DWORD CSecure::CheckOperatorRule(DCOP_SESSION_HEAD *pSessionHead,
         return FAILURE;
     }
 
-    /// 这里就是系统用户检查过的了，后面就不要检查其他用户了
+    /// 这里表示本检查有效，后面就不用检查其他类型用户了
     bCheck = true;
 
+    /// 权限满足，返回成功
     if (pSessionHead->m_group >= pRule->m_systemOperator)
+    {
+        return SUCCESS;
+    }
+
+    /// 没有权限，中断运行
+    bContinue = false;
+    return ERRCODE_IO_NO_RIGHT_TO_OPERATE;
+}
+
+/*******************************************************
+  函 数 名: CSecure::CheckVisitorRule
+  描    述: 检查参观者操作权限
+  输    入: 
+  输    出: 
+  返    回: 
+  修改记录: 
+ *******************************************************/
+DWORD CSecure::CheckVisitorRule(DCOP_SESSION_HEAD *pSessionHead,
+                        void *pSessionData,
+                        ISecure::Node *pRule,
+                        objMsg *pInput,
+                        objMsg *&pOutput,
+                        bool &bContinue,
+                        bool &bCheck)
+{
+    if (!pSessionHead || !pRule)
+    {
+        return FAILURE;
+    }
+
+    /// 必须是未登录用户
+    if (pSessionHead->m_group != DCOP_GROUP_VISITOR)
+    {
+        return FAILURE;
+    }
+
+    /// 这里表示本检查有效，后面就不用检查其他类型用户了
+    bCheck = true;
+
+    /// 权限满足，返回成功
+    if (pRule->m_visitorRight & DCOP_SECURE_RIGHT(pSessionHead->m_ctrl))
     {
         return SUCCESS;
     }
@@ -527,38 +487,26 @@ DWORD CSecure::CheckOwnerRule(DCOP_SESSION_HEAD *pSessionHead,
         return FAILURE;
     }
 
-    return FAILURE;
-}
-
-/*******************************************************
-  函 数 名: CSecure::CheckVisitorRule
-  描    述: 检查参观者操作权限
-  输    入: 
-  输    出: 
-  返    回: 
-  修改记录: 
- *******************************************************/
-DWORD CSecure::CheckVisitorRule(DCOP_SESSION_HEAD *pSessionHead,
-                        void *pSessionData,
-                        ISecure::Node *pRule,
-                        objMsg *pInput,
-                        objMsg *&pOutput,
-                        bool &bContinue,
-                        bool &bCheck)
-{
-    if (!pSessionHead || !pRule)
+    /// 必须打开检查所有者权限
+    if (!pRule->m_ownerField)
     {
         return FAILURE;
     }
 
-    /// 必须是未登录用户
-    if (pSessionHead->m_group != DCOP_GROUP_VISITOR)
+    /// 检查消息中的用户权限
+    DWORD dwRc = CheckMsgUser(pSessionHead, pSessionData, 
+                        pRule->m_ownerField, 
+                        pRule->m_ownerRight,
+                        bCheck);
+
+    /// 无法检查
+    if (!bCheck)
     {
-        return FAILURE;
+        return dwRc;
     }
 
-    /// 检查未登录用户权限设定
-    if (pRule->m_visitorRight & DCOP_SECURE_RIGHT(pSessionHead->m_ctrl))
+    /// 检查权限通过
+    if (dwRc == SUCCESS)
     {
         return SUCCESS;
     }
@@ -622,6 +570,105 @@ DWORD CSecure::CheckManagerRule(DCOP_SESSION_HEAD *pSessionHead,
     if (pSessionHead->m_group != DCOP_GROUP_USER)
     {
         return FAILURE;
+    }
+
+    return FAILURE;
+}
+
+/*******************************************************
+  函 数 名: CSecure::CheckMsgUser
+  描    述: 检查消息中的user字段
+  输    入: 
+  输    出: 
+  返    回: 
+  修改记录: 
+ *******************************************************/
+DWORD CSecure::CheckMsgUser(DCOP_SESSION_HEAD *pSessionHead,
+                        void *pSessionData,
+                        DWORD userField,
+                        DWORD userRight,
+                        bool &bCheck)
+{
+    if (!pSessionHead || !pSessionData || !userField)
+    {
+        return FAILURE;
+    }
+
+    /// 获取消息中的条件参数
+    CDArray aCondHeads;
+    IObjectMember::GetMsgHead(pSessionData, pSessionHead->m_type.m_valueLen, 0, &aCondHeads, 0, 0, 0);
+
+    DCOP_CONDITION_HEAD *pCondHead = (DCOP_CONDITION_HEAD *)aCondHeads.Pos(0);
+    if (!pCondHead)
+    {
+        return FAILURE;
+    }
+
+    /// 首先确认条件字段中的参数必须是同时满足
+    if (pCondHead->m_condition == DCOP_CONDITION_ANY)
+    {
+        return FAILURE;
+    }
+
+    void *pCondParaData = *(void **)(pCondHead + 1);
+    DWORD dwCondParaCount = pCondHead->m_paraCount;
+    DWORD dwCondDataLen = pCondHead->m_paraLen;
+    if (!pCondParaData || !dwCondParaCount || !dwCondDataLen)
+    {
+        return FAILURE;
+    }
+
+    CDStream sCondPara(dwCondParaCount * sizeof(DCOP_PARA_NODE));
+    DCOP_PARA_NODE *pCondPara = (DCOP_PARA_NODE *)sCondPara.Buffer();
+    if (!pCondPara)
+    {
+        return FAILURE;
+    }
+
+    void *pCondData = IObjectMember::GetMsgParaData(pCondParaData, 
+                        dwCondParaCount, dwCondDataLen, 
+                        pCondPara);
+    if (!pCondData)
+    {
+        return FAILURE;
+    }
+
+    /// 在条件参数字段中查找指定字段
+    DWORD dwParaPos = dwCondParaCount;
+    DWORD dwParaOffset = 0;
+    for (DWORD i = 0; i < dwCondParaCount; ++i)
+    {
+        if ((pCondPara[i].m_paraID == userField) &&
+            (pCondPara[i].m_opCode == DCOP_OPCODE_EQUAL))
+        {
+            dwParaPos = i;
+            break;
+        }
+
+        dwParaOffset += pCondPara[i].m_paraSize;
+    }
+
+    /// 未找到指定字段
+    if (dwParaPos >= dwCondParaCount)
+    {
+        return FAILURE;
+    }
+
+    /// 已找到指定字段，就需要进行检查了
+    bCheck = true;
+
+    /// 在条件参数数据中查找user值
+    if (Bytes_GetDwordValue((BYTE *)pCondData + dwParaOffset, 
+                        pCondPara[dwParaPos].m_paraSize) != 
+        pSessionHead->m_user)
+    {
+        return FAILURE;
+    }
+
+    /// 检查用户权限设定
+    if (userRight & DCOP_SECURE_RIGHT(pSessionHead->m_ctrl))
+    {
+        return SUCCESS;
     }
 
     return FAILURE;

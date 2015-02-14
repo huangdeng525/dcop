@@ -1218,6 +1218,7 @@ DWORD CDataFile::DelRecord(DWORD dwRecNo)
                         dwPosIdx + dwRecIdx * (1 + GetRecSize()));
     if (dwRc || !(*pRecord))
     {
+        DCOP_Free(pRecord);
         return FAILURE;
     }
 
@@ -1227,6 +1228,7 @@ DWORD CDataFile::DelRecord(DWORD dwRecNo)
                         dwPosIdx + dwRecIdx * (1 + GetRecSize()));
     if (dwRc)
     {
+        DCOP_Free(pRecord);
         return dwRc;
     }
 
@@ -1240,6 +1242,7 @@ DWORD CDataFile::DelRecord(DWORD dwRecNo)
 
     /// ´¥·¢É¾³ýË÷Òý
     m_recIdx.OnDelRec(GetFields(), pRecord + 1);
+    DCOP_Free(pRecord);
 
     return SUCCESS;
 }

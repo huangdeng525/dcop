@@ -68,10 +68,6 @@ private:
                         objMsg *&pOutput,
                         bool &bContinue);
 
-    bool CheckMsgOwner(DCOP_SESSION_HEAD *pSessionHead,
-                        void *pSessionData,
-                        DWORD ownerField);
-
     DWORD CheckOperatorRule(DCOP_SESSION_HEAD *pSessionHead,
                         void *pSessionData,
                         ISecure::Node *pRule,
@@ -80,7 +76,7 @@ private:
                         bool &bContinue,
                         bool &bCheck);
 
-    DWORD CheckOwnerRule(DCOP_SESSION_HEAD *pSessionHead,
+    DWORD CheckVisitorRule(DCOP_SESSION_HEAD *pSessionHead,
                         void *pSessionData,
                         ISecure::Node *pRule,
                         objMsg *pInput,
@@ -88,7 +84,7 @@ private:
                         bool &bContinue,
                         bool &bCheck);
 
-    DWORD CheckVisitorRule(DCOP_SESSION_HEAD *pSessionHead,
+    DWORD CheckOwnerRule(DCOP_SESSION_HEAD *pSessionHead,
                         void *pSessionData,
                         ISecure::Node *pRule,
                         objMsg *pInput,
@@ -110,6 +106,12 @@ private:
                         objMsg *pInput,
                         objMsg *&pOutput,
                         bool &bContinue,
+                        bool &bCheck);
+
+    DWORD CheckMsgUser(DCOP_SESSION_HEAD *pSessionHead,
+                        void *pSessionData,
+                        DWORD userField,
+                        DWORD userRight,
                         bool &bCheck);
 
 private:
