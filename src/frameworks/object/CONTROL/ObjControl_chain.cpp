@@ -120,7 +120,8 @@ DWORD CControlChain::OnCtrl(objMsg *pInput,
 
     DWORD dwRc = FAILURE;
 
-    for (DWORD i = 0; i < aNodeList.Count(); ++i)
+    DWORD dwCount = aNodeList.Count();
+    for (DWORD i = 0; i < dwCount; ++i)
     {
         Node *pNode = (Node *)aNodeList.Pos(i);
         if (!pNode)
@@ -133,7 +134,11 @@ DWORD CControlChain::OnCtrl(objMsg *pInput,
             continue;
         }
 
-        dwRc = pNode->m_function(pInput, pOutput, bContinue, pNode->m_ctrler);
+        dwRc = pNode->m_function(pInput, 
+                        pOutput, 
+                        bContinue, 
+                        pNode->m_ctrler, 
+                        ((i+1) == dwCount)? true : false);
         if (!bContinue)
         {
             break;
@@ -163,6 +168,12 @@ DWORD CControlChain::RegCtrlNode(IObject *ctrler,
 
     for (DWORD i = 0; i < count; ++i)
     {
+        if (!ctrls->m_function)
+        {
+            dwRc = FAILURE;
+            break;
+        }
+
         Node node;
         node.m_attribute = ctrls->m_attribute;
         node.m_ctrl = ctrls->m_ctrl;
