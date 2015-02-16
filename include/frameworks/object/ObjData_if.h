@@ -48,58 +48,63 @@ interface IData : public IObject
 
     /// 创建一个数据
     virtual DWORD Create(
-                DWORD dwType, 
-                DWORD attrID, 
-                IObject *pOwner, 
-                Handle &hData
-                ) = 0;
+                        DWORD dwType, 
+                        DWORD attrID, 
+                        IObject *pOwner, 
+                        Handle &hData
+                        ) = 0;
 
     /// 销毁一个数据
     virtual DWORD Destroy(
-                DWORD attrID
-                ) = 0;
+                        DWORD attrID
+                        ) = 0;
+
+    /// 获取数据句柄
+    virtual Handle GetHandle(
+                        DWORD attrID
+                        ) = 0;
 
     /// 添加一条记录
     virtual DWORD AddRecord(
-                Handle hData, 
-                DCOP_PARA_NODE *pReqPara, 
-                DWORD dwReqParaCount, 
-                void *pReqData, 
-                DWORD dwReqDataLen, 
-                DCOP_PARA_NODE **ppEvtPara = 0, 
-                DWORD *pdwEvtParaCount = 0, 
-                CDArray *pEvtData = 0
-                ) = 0;
+                        Handle hData, 
+                        DCOP_PARA_NODE *pReqPara, 
+                        DWORD dwReqParaCount, 
+                        void *pReqData, 
+                        DWORD dwReqDataLen, 
+                        DCOP_PARA_NODE **ppEvtPara = 0, 
+                        DWORD *pdwEvtParaCount = 0, 
+                        CDArray *pEvtData = 0
+                        ) = 0;
 
     /// 删除一条记录
     virtual DWORD DelRecord(
-                Handle hData, 
-                BYTE byCond, 
-                DCOP_PARA_NODE *pCondPara, 
-                DWORD dwCondParaCount, 
-                void *pCondData, 
-                DWORD dwCondDataLen, 
-                DCOP_PARA_NODE **ppEvtPara = 0, 
-                DWORD *pdwEvtParaCount = 0, 
-                CDArray *pEvtData = 0
-                ) = 0;
+                        Handle hData, 
+                        BYTE byCond, 
+                        DCOP_PARA_NODE *pCondPara, 
+                        DWORD dwCondParaCount, 
+                        void *pCondData, 
+                        DWORD dwCondDataLen, 
+                        DCOP_PARA_NODE **ppEvtPara = 0, 
+                        DWORD *pdwEvtParaCount = 0, 
+                        CDArray *pEvtData = 0
+                        ) = 0;
 
     /// 编辑一条记录
     virtual DWORD EditRecord(
-                Handle hData, 
-                BYTE byCond, 
-                DCOP_PARA_NODE *pCondPara, 
-                DWORD dwCondParaCount, 
-                void *pCondData, 
-                DWORD dwCondDataLen, 
-                DCOP_PARA_NODE *pReqPara, 
-                DWORD dwReqParaCount, 
-                void *pReqData, 
-                DWORD dwReqDataLen, 
-                DCOP_PARA_NODE **ppEvtPara = 0, 
-                DWORD *pdwEvtParaCount = 0, 
-                CDArray *pEvtData = 0
-                ) = 0;
+                        Handle hData, 
+                        BYTE byCond, 
+                        DCOP_PARA_NODE *pCondPara, 
+                        DWORD dwCondParaCount, 
+                        void *pCondData, 
+                        DWORD dwCondDataLen, 
+                        DCOP_PARA_NODE *pReqPara, 
+                        DWORD dwReqParaCount, 
+                        void *pReqData, 
+                        DWORD dwReqDataLen, 
+                        DCOP_PARA_NODE **ppEvtPara = 0, 
+                        DWORD *pdwEvtParaCount = 0, 
+                        CDArray *pEvtData = 0
+                        ) = 0;
 
     /// 查询多条记录
     virtual DWORD QueryRecord(
@@ -118,28 +123,28 @@ interface IData : public IObject
 
     /// 统计记录数量
     virtual DWORD CountRecord(
-                Handle hData, 
-                BYTE byCond, 
-                DCOP_PARA_NODE *pCondPara, 
-                DWORD dwCondParaCount, 
-                void *pCondData, 
-                DWORD dwCondDataLen, 
-                DWORD &rdwCount
-                ) = 0;
+                        Handle hData, 
+                        BYTE byCond, 
+                        DCOP_PARA_NODE *pCondPara, 
+                        DWORD dwCondParaCount, 
+                        void *pCondData, 
+                        DWORD dwCondDataLen, 
+                        DWORD &rdwCount
+                        ) = 0;
 
     /// 添加关键字索引
     virtual DWORD AddKeyIdx(
-                Handle hData, 
-                DCOP_PARA_NODE *pIdxPara, 
-                DWORD dwIdxParaCount
-                ) = 0;
+                        Handle hData, 
+                        DCOP_PARA_NODE *pIdxPara, 
+                        DWORD dwIdxParaCount
+                        ) = 0;
 
     /// 删除关键字索引
     virtual DWORD DelKeyIdx(
-                Handle hData, 
-                DCOP_PARA_NODE *pIdxPara, 
-                DWORD dwIdxParaCount
-                ) = 0;
+                        Handle hData, 
+                        DCOP_PARA_NODE *pIdxPara, 
+                        DWORD dwIdxParaCount
+                        ) = 0;
 
 };
 
