@@ -249,6 +249,27 @@ DWORD CData::Destroy(DWORD dwAttrID)
 }
 
 /*******************************************************
+  函 数 名: CData::GetHandle
+  描    述: 获取属性值对应的数据句柄
+  输    入: 
+  输    出: 
+  返    回: 
+  修改记录: 
+ *******************************************************/
+IData::Handle CData::GetHandle(DWORD dwAttrID)
+{
+    AutoObjLock(this);
+
+    IT_DATA it_data = m_datas.find(dwAttrID);
+    if (it_data == m_datas.end())
+    {
+        return NULL;
+    }
+
+    return (Handle)((*it_data).second);
+}
+
+/*******************************************************
   函 数 名: CData::AddRecord
   描    述: 添加一条记录
   输    入: 
@@ -439,26 +460,5 @@ DWORD CData::DelKeyIdx(Handle hData, DCOP_PARA_NODE *pIdxPara, DWORD dwIdxParaCo
     /// 这里不使用data本身的锁保护，因为里面会使用owner对象的锁保护
 
     return pDataHandle->DelKeyIdx(pIdxPara, dwIdxParaCount);
-}
-
-/*******************************************************
-  函 数 名: CData::GetHandle
-  描    述: 获取属性值对应的数据句柄
-  输    入: 
-  输    出: 
-  返    回: 
-  修改记录: 
- *******************************************************/
-IData::Handle CData::GetHandle(DWORD dwAttrID)
-{
-    AutoObjLock(this);
-
-    IT_DATA it_data = m_datas.find(dwAttrID);
-    if (it_data == m_datas.end())
-    {
-        return NULL;
-    }
-
-    return (Handle)((*it_data).second);
 }
 

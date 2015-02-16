@@ -108,18 +108,18 @@ interface IData : public IObject
 
     /// 查询多条记录
     virtual DWORD QueryRecord(
-                Handle hData, 
-                BYTE byCond, 
-                DCOP_PARA_NODE *pCondPara, 
-                DWORD dwCondParaCount, 
-                void *pCondData, 
-                DWORD dwCondDataLen, 
-                DCOP_PARA_NODE *pReqPara, 
-                DWORD dwReqParaCount, 
-                DCOP_PARA_NODE *&rpRspPara, 
-                DWORD &rdwRspParaCount, 
-                CDArray &aRspData
-                ) = 0;
+                        Handle hData, 
+                        BYTE byCond, 
+                        DCOP_PARA_NODE *pCondPara, 
+                        DWORD dwCondParaCount, 
+                        void *pCondData, 
+                        DWORD dwCondDataLen, 
+                        DCOP_PARA_NODE *pReqPara, 
+                        DWORD dwReqParaCount, 
+                        DCOP_PARA_NODE *&rpRspPara, 
+                        DWORD &rdwRspParaCount, 
+                        CDArray &aRspData
+                        ) = 0;
 
     /// 统计记录数量
     virtual DWORD CountRecord(
