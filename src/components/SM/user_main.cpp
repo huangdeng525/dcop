@@ -253,7 +253,7 @@ void CUser::OnStart(objMsg *msg)
         ISecure::Node node[] = 
         {
             {m_users.GetAttribute()->GetID(), 
-                0, 0, 0, 0, 0, 0, 0, 0, 0, 
+                0, 0, 0, 0, 0, 0, 
                 DCOP_GROUP_ADMINISTRATOR},
         };
         dwRc = m_piSecure->RegRule(node, ARRAY_SIZE(node));

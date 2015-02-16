@@ -310,7 +310,7 @@ void CSession::OnStart(objMsg *msg)
         ISecure::Node node[] = 
         {
             {m_sessions.GetAttribute()->GetID(), 
-                0, 0, 0, 0, 0, 0, 0, 0, 0, 
+                0, 0, 0, 0, 0, 0, 
                 DCOP_GROUP_ADMINISTRATOR},
         };
         dwRc = m_piSecure->RegRule(node, ARRAY_SIZE(node));

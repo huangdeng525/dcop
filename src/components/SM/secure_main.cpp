@@ -52,6 +52,7 @@ DCOP_IMPLEMENT_IOBJECT_MSG_HANDLE_END
 CSecure::CSecure(Instance *piParent, int argc, char **argv)
 {
     m_piControl = 0;
+    m_piData = 0;
 
     DCOP_CONSTRUCT_INSTANCE(piParent);
     DCOP_CONSTRUCT_IOBJECT(argc, argv);
@@ -93,6 +94,7 @@ DWORD CSecure::Init(IObject *root, int argc, void **argv)
     /// 查询对象
     DCOP_QUERY_OBJECT_START(root)
         DCOP_QUERY_OBJECT_ITEM(IControl,     DCOP_OBJECT_CONTROL,    m_piControl)
+        DCOP_QUERY_OBJECT_ITEM(IData,        DCOP_OBJECT_DATA,       m_piData)
     DCOP_QUERY_OBJECT_END
 
     return SUCCESS;
@@ -108,6 +110,7 @@ DWORD CSecure::Init(IObject *root, int argc, void **argv)
  *******************************************************/
 void CSecure::Fini()
 {
+    DCOP_RELEASE_INSTANCE(m_piData);
     DCOP_RELEASE_INSTANCE(m_piControl);
 }
 
@@ -134,9 +137,6 @@ void CSecure::Dump(LOG_PRINT logPrint, LOG_PARA logPara, int argc, void **argv)
         logPrint(STR_FORMAT("    userAttr: 0x%x \r\n", ((*it).second).m_userAttr), logPara);
         logPrint(STR_FORMAT("    userField: %d \r\n", ((*it).second).m_userField), logPara);
         DumpRight("    userRight", logPrint, logPara, ((*it).second).m_userRight);
-        logPrint(STR_FORMAT("    managerAttr: 0x%x \r\n", ((*it).second).m_managerAttr), logPara);
-        logPrint(STR_FORMAT("    managerField: %d \r\n", ((*it).second).m_managerField), logPara);
-        DumpRight("    managerRight", logPrint, logPara, ((*it).second).m_managerRight);
         logPrint(STR_FORMAT("    systemOperator: %d \r\n", ((*it).second).m_systemOperator), logPara);
     }
 }
@@ -217,7 +217,8 @@ DWORD CSecure::RegRule(Node *rules, DWORD count)
 DWORD CSecure::InputCtrl(objMsg *pInput,
                         objMsg *&pOutput,
                         bool &bContinue,
-                        IObject *piCtrler)
+                        IObject *piCtrler,
+                        bool bLastNode)
 {
     CSecure *pSecure = (CSecure *)piCtrler;
     if (!pSecure)
@@ -225,7 +226,7 @@ DWORD CSecure::InputCtrl(objMsg *pInput,
         return FAILURE;
     }
 
-    return pSecure->CheckAllRule(pInput, pOutput, bContinue);
+    return pSecure->CheckAllRule(pInput, pOutput, bContinue, bLastNode);
 }
 
 /*******************************************************
@@ -305,7 +306,8 @@ ISecure::Node *CSecure::GetRuleNode(DWORD attrID)
  *******************************************************/
 DWORD CSecure::CheckAllRule(objMsg *pInput,
                         objMsg *&pOutput,
-                        bool &bContinue)
+                        bool &bContinue,
+                        bool bLastNode)
 {
     if (!pInput) return FAILURE;
 
@@ -341,7 +343,6 @@ DWORD CSecure::CheckAllRule(objMsg *pInput,
             &CSecure::CheckVisitorRule,
             &CSecure::CheckOwnerRule,
             &CSecure::CheckUserRule,
-            &CSecure::CheckManagerRule,
         };
 
         /// 依次检查
@@ -373,6 +374,13 @@ DWORD CSecure::CheckAllRule(objMsg *pInput,
 
         /// 已经得到检查结果
         if (bCheck) break;
+    }
+
+    /// 如果未检测出结果，并且是最后一个控制节点，那么就只有终止权限
+    if (!bCheck && bLastNode)
+    {
+        bContinue = false;
+        return ERRCODE_IO_NO_RIGHT_TO_OPERATE;
     }
 
     return dwRc;
@@ -488,7 +496,7 @@ DWORD CSecure::CheckOwnerRule(DCOP_SESSION_HEAD *pSessionHead,
     }
 
     /// 必须打开检查所有者权限
-    if (!pRule->m_ownerField)
+    if (!pRule->m_ownerField || !pRule->m_ownerRight)
     {
         return FAILURE;
     }
@@ -518,7 +526,7 @@ DWORD CSecure::CheckOwnerRule(DCOP_SESSION_HEAD *pSessionHead,
 
 /*******************************************************
   函 数 名: CSecure::CheckUserRule
-  描    述: 检查一般用户操作权限
+  描    述: 检查用户操作权限
   输    入: 
   输    出: 
   返    回: 
@@ -543,36 +551,40 @@ DWORD CSecure::CheckUserRule(DCOP_SESSION_HEAD *pSessionHead,
         return FAILURE;
     }
 
-    return FAILURE;
-}
-
-/*******************************************************
-  函 数 名: CSecure::CheckManagerRule
-  描    述: 检查管理用户操作权限
-  输    入: 
-  输    出: 
-  返    回: 
-  修改记录: 
- *******************************************************/
-DWORD CSecure::CheckManagerRule(DCOP_SESSION_HEAD *pSessionHead,
-                        void *pSessionData,
-                        ISecure::Node *pRule,
-                        objMsg *pInput,
-                        objMsg *&pOutput,
-                        bool &bContinue,
-                        bool &bCheck)
-{
-    if (!pSessionHead || !pRule)
+    /// 必须打开检查用户权限
+    if (!pRule->m_userField || !pRule->m_userRight)
     {
         return FAILURE;
     }
 
-    if (pSessionHead->m_group != DCOP_GROUP_USER)
+    /// 如果属性值未设定，则使用当前属性值
+    DWORD dwAttrID = pRule->m_userAttr;
+    if (!dwAttrID) dwAttrID = pSessionHead->m_attribute;
+
+    /// 获取存储的权限值
+    DWORD dwRspRight = 0;
+    DWORD dwRc = GetUserRight(pSessionHead->m_user,
+                        dwAttrID,
+                        pRule->m_userField,
+                        pRule->m_userRight,
+                        dwRspRight);
+    if (dwRc != SUCCESS)
     {
-        return FAILURE;
+        return dwRc;
     }
 
-    return FAILURE;
+    /// 这里表示本检查有效，后面就不用检查其他类型用户了
+    bCheck = true;
+
+    /// 权限满足，返回成功
+    if (dwRspRight & DCOP_SECURE_RIGHT(pSessionHead->m_ctrl))
+    {
+        return SUCCESS;
+    }
+
+    /// 没有权限，中断运行
+    bContinue = false;
+    return ERRCODE_IO_NO_RIGHT_TO_OPERATE;
 }
 
 /*******************************************************
@@ -672,5 +684,77 @@ DWORD CSecure::CheckMsgUser(DCOP_SESSION_HEAD *pSessionHead,
     }
 
     return FAILURE;
+}
+
+/*******************************************************
+  函 数 名: CSecure::GetUserRight
+  描    述: 获取用户权限
+  输    入: 
+  输    出: 
+  返    回: 
+  修改记录: 
+ *******************************************************/
+DWORD CSecure::GetUserRight(DWORD userID,
+                        DWORD userAttr,
+                        DWORD userField,
+                        DWORD userRight,
+                        DWORD &rspRight)
+{
+    if (!m_piData)
+    {
+        return FAILURE;
+    }
+
+    IData::Handle hData = m_piData->GetHandle(userAttr);
+    if (!hData)
+    {
+        return FAILURE;
+    }
+
+    /// 条件字段描述
+    DCOP_PARA_NODE UserKeyID[] = 
+    {
+        {userField, 0, IModel::FIELD_DWORD, sizeof(DWORD)}
+    };
+
+    BYTE condData[4];
+    Bytes_SetDword(condData, userID);
+
+    /// 响应字段描述
+    DCOP_PARA_NODE UserParas[] = 
+    {
+        {userRight, 0, IModel::FIELD_DWORD, sizeof(DWORD)}
+    };
+
+    DCOP_PARA_NODE *pRspPara = 0;
+    DWORD dwRspParaCount = 0;
+    CDArray aRspData;
+
+    /// 获取存储的权限值
+    DWORD dwRc = m_piData->QueryRecord(hData, 
+                        DCOP_CONDITION_ONE, 
+                        UserKeyID, ARRAY_SIZE(UserKeyID), 
+                        condData, sizeof(condData), 
+                        UserParas, ARRAY_SIZE(UserParas), 
+                        pRspPara, 
+                        dwRspParaCount, 
+                        aRspData);
+    if (dwRc != SUCCESS)
+    {
+        return dwRc;
+    }
+
+    /// 这里不需要响应字段，直接释放
+    if (pRspPara) DCOP_Free(pRspPara);
+
+    if (aRspData.Count() == 0)
+    {
+        return FAILURE;
+    }
+
+    /// 输出存储的权限值
+    rspRight = Bytes_GetDwordValue((BYTE *)aRspData.Pos(0), aRspData.Size());
+
+    return SUCCESS;
 }
 
