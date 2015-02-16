@@ -42,6 +42,8 @@ public:
 
     DWORD Destroy(DWORD attrID);
 
+    Handle GetHandle(DWORD attrID);
+
     DWORD AddRecord(Handle hData, 
                 DCOP_PARA_NODE *pReqPara, 
                 DWORD dwReqParaCount, 
@@ -107,8 +109,6 @@ public:
                 DCOP_PARA_NODE *pIdxPara, 
                 DWORD dwIdxParaCount
                 );
-
-    Handle GetHandle(DWORD attrID);
 
 private:
     MAP_DATA m_datas;

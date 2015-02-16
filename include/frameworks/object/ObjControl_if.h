@@ -27,7 +27,8 @@ interface IControl : public IObject
                         objMsg *pInput,
                         objMsg *&pOutput,
                         bool &bContinue,
-                        IObject *piCtrler
+                        IObject *piCtrler,
+                        bool bLastNode
                         );
 
     /// øÿ÷∆µ„√Ë ˆ

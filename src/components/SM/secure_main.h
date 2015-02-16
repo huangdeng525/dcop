@@ -13,6 +13,7 @@
 #include "secure_if.h"
 #include "ObjAttribute_if.h"
 #include "ObjControl_if.h"
+#include "ObjData_if.h"
 
 
 /// -------------------------------------------------
@@ -55,7 +56,8 @@ private:
     static DWORD InputCtrl(objMsg *pInput,
                         objMsg *&pOutput,
                         bool &bContinue,
-                        IObject *piCtrler);
+                        IObject *piCtrler,
+                        bool bLastNode);
 
     void DumpRight(const char *pcszTitle, 
                         LOG_PRINT logPrint, 
@@ -66,7 +68,8 @@ private:
 
     DWORD CheckAllRule(objMsg *pInput,
                         objMsg *&pOutput,
-                        bool &bContinue);
+                        bool &bContinue,
+                        bool bLastNode);
 
     DWORD CheckOperatorRule(DCOP_SESSION_HEAD *pSessionHead,
                         void *pSessionData,
@@ -100,23 +103,22 @@ private:
                         bool &bContinue,
                         bool &bCheck);
 
-    DWORD CheckManagerRule(DCOP_SESSION_HEAD *pSessionHead,
-                        void *pSessionData,
-                        ISecure::Node *pRule,
-                        objMsg *pInput,
-                        objMsg *&pOutput,
-                        bool &bContinue,
-                        bool &bCheck);
-
     DWORD CheckMsgUser(DCOP_SESSION_HEAD *pSessionHead,
                         void *pSessionData,
                         DWORD userField,
                         DWORD userRight,
                         bool &bCheck);
 
+    DWORD GetUserRight(DWORD userID,
+                        DWORD userAttr,
+                        DWORD userField,
+                        DWORD userRight,
+                        DWORD &rspRight);
+
 private:
     MAP_RULES m_rules;
     IControl *m_piControl;
+    IData *m_piData;
 };
 
 

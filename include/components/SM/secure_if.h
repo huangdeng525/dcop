@@ -52,9 +52,6 @@ interface ISecure : public IObject
         DWORD m_userAttr;
         DWORD m_userField;
         DWORD m_userRight;
-        DWORD m_managerAttr;
-        DWORD m_managerField;
-        DWORD m_managerRight;
         DWORD m_systemOperator;
     };
 
