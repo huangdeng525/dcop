@@ -31,6 +31,8 @@
 #define DCOP_OBJECT_RESPONSE                10              // 响应器
 #define DCOP_OBJECT_MODEL                   11              // 模型
 #define DCOP_OBJECT_DATA                    12              // 数据
+#define DCOP_OBJECT_CONNECT                 13              // 连接器
+#define DCOP_OBJECT_PROXY                   14              // 代理
 
 #define DCOP_OBJECT_SESSION                 20              // 会话管理
 #define DCOP_OBJECT_USER                    21              // 用户管理
