@@ -18,7 +18,7 @@ INTF_VER(IControl, 1, 0, 0);
 
 
 /// -------------------------------------------------
-/// 对象通知接口(生产者发布事件、消费者订阅事件)
+/// 控制器接口(通过对象预设的接口进行控制)
 /// -------------------------------------------------
 interface IControl : public IObject
 {
@@ -74,3 +74,4 @@ interface IControl : public IObject
 
 
 #endif // #ifndef _OBJCONTROL_IF_H_
+

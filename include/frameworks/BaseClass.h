@@ -93,7 +93,8 @@ public:
 
     /// Dump入口
     ///     变参使用: 实现时请按约定的顺序获取各个指针参数并输出
-    virtual void Dump(LOG_PRINT logPrint, LOG_PARA logPara, int argc, void **argv) {}
+    virtual void Dump(LOG_PRINT logPrint, LOG_PARA logPara, int argc, void **argv)
+    {if (logPrint) logPrint(STR_FORMAT("[Dump] objName:'%s', objID:%d, objPtr:%p \r\n", Name(), ID(), this), logPara);}
 
     /// 部署一个新的系统(使用部署配置文件)[返回该系统根对象(管理器)]
     virtual objBase *Deploy(const char *cfgDeploy) {return 0;}
