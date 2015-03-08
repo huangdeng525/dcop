@@ -39,6 +39,7 @@ CPPBUILDUNIT_FORCELINK(vRegCHttpJsonToFactoryFunc, 0);
 CPPBUILDUNIT_FORCELINK(vRegCHttpResponseToFactoryFunc, 0);
 CPPBUILDUNIT_FORCELINK(vRegCMonitorToFactoryFunc, 0);
 CPPBUILDUNIT_FORCELINK(vRegCAppBaseToFactoryFunc, 0);
+CPPBUILDUNIT_FORCELINK(vRegCPythonXToFactoryFunc, 0);
 
 /// -------------------------------------------------
 /// 本段代码来自《The Cert C Secure Coding Standard》

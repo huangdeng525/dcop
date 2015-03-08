@@ -47,6 +47,7 @@ CPPBUILDUNIT_FORCELINK(vRegCHttpJsonToFactoryFunc, 0);
 CPPBUILDUNIT_FORCELINK(vRegCHttpResponseToFactoryFunc, 0);
 CPPBUILDUNIT_FORCELINK(vRegCMonitorToFactoryFunc, 0);
 CPPBUILDUNIT_FORCELINK(vRegCAppBaseToFactoryFunc, 0);
+CPPBUILDUNIT_FORCELINK(vRegCPythonXToFactoryFunc, 0);
 CPPBUILDUNIT_FORCELINK(vRegCTestForIObjectAToFactoryFunc, 0);
 
 
