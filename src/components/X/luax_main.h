@@ -1,22 +1,22 @@
 /// -------------------------------------------------
-/// pythonx_main.h : python扩展私有头文件
+/// luax_main.h : lua扩展私有头文件
 /// -------------------------------------------------
 /// Copyright (c) 2015, Wang Yujia <combo.xy@163.com>
 /// All rights reserved.
 /// -------------------------------------------------
 
-#ifndef _PYTHONX_MAIN_H_
-#define _PYTHONX_MAIN_H_
+#ifndef _LUAX_MAIN_H_
+#define _LUAX_MAIN_H_
 
-#include "pythonx_if.h"
-#include "Python.h"
+#include "lua.hpp"
+#include "luax_if.h"
 
 
-class CPythonX : public IPythonX
+class CLuaX : public ILuaX
 {
 public:
-    CPythonX(Instance *piParent, int argc, char **argv);
-    ~CPythonX();
+    CLuaX(Instance *piParent, int argc, char **argv);
+    ~CLuaX();
 
     DCOP_DECLARE_INSTANCE;
     DCOP_DECLARE_IOBJECT;
@@ -27,10 +27,14 @@ public:
     void Dump(LOG_PRINT logPrint, LOG_PARA logPara, int argc, void **argv);
 
 private:
-    void PythonInit();
-    void PythonFini();
+    void LuaInit();
+    void LuaFini();
+    void LuaError(LOG_PRINT logPrint, LOG_PARA logPara, int errNo);
+
+private:
+    lua_State *m_L;
 };
 
 
-#endif // #ifndef _PYTHONX_MAIN_H_
+#endif // #ifndef _LUAX_MAIN_H_
 
