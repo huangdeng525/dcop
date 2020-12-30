@@ -1,5 +1,5 @@
 /// -------------------------------------------------
-/// log.cpp : ÈÕÖ¾·â×°ÊµÏÖÎÄ¼ş
+/// log.cpp : æ—¥å¿—å°è£…å®ç°æ–‡ä»¶
 /// -------------------------------------------------
 /// Copyright (c) 2015, Wang Yujia <combo.xy@163.com>
 /// All rights reserved.
@@ -18,7 +18,7 @@
 
 
 /// -------------------------------------------------
-/// ¸ú×ÙĞÅÏ¢¿ª¹Ø
+/// è·Ÿè¸ªä¿¡æ¯å¼€å…³
 /// -------------------------------------------------
 int g_debug_switch = 
 #ifdef DEBUG
@@ -28,25 +28,25 @@ int g_debug_switch =
 #endif
 
 /// -------------------------------------------------
-/// ×Ô¶¯Ëø
+/// è‡ªåŠ¨é”
 /// -------------------------------------------------
 #define AutoLogLock(x) AutoLogLockEx __tmp_##x(x)
 
 /// -------------------------------------------------
-/// ÈÕÖ¾ÀàĞÍ
+/// æ—¥å¿—ç±»å‹
 /// -------------------------------------------------
-static CLog *sg_pErrLog = 0;                        // ´íÎóÈÕÖ¾
-static CLog *sg_pTraceLog = 0;                      // ¸ú×ÙĞÅÏ¢
-static CLog *sg_pCheckLog = 0;                      // ¼ì²éÈÕÖ¾
+static CLog *sg_pErrLog = 0;                        // é”™è¯¯æ—¥å¿—
+static CLog *sg_pTraceLog = 0;                      // è·Ÿè¸ªä¿¡æ¯
+static CLog *sg_pCheckLog = 0;                      // æ£€æŸ¥æ—¥å¿—
 
 
 /*******************************************************
-  º¯ Êı Ãû: DebugLogStatus
-  Ãè    Êö: µ÷ÊÔ¿ª¹Ø×´Ì¬
-  Êä    Èë: 
-  Êä    ³ö: 
-  ·µ    »Ø: 
-  ĞŞ¸Ä¼ÇÂ¼: 
+  å‡½ æ•° å: DebugLogStatus
+  æ    è¿°: è°ƒè¯•å¼€å…³çŠ¶æ€
+  è¾“    å…¥: 
+  è¾“    å‡º: 
+  è¿”    å›: 
+  ä¿®æ”¹è®°å½•: 
  *******************************************************/
 void DebugLogStatus(int status)
 {
@@ -59,12 +59,12 @@ void DebugLogStatus(int status)
 }
 
 /*******************************************************
-  º¯ Êı Ãû: GetLogTime
-  Ãè    Êö: »ñÈ¡ÈÕÖ¾Ê±¼ä
-  Êä    Èë: 
-  Êä    ³ö: 
-  ·µ    »Ø: 
-  ĞŞ¸Ä¼ÇÂ¼: 
+  å‡½ æ•° å: GetLogTime
+  æ    è¿°: è·å–æ—¥å¿—æ—¶é—´
+  è¾“    å…¥: 
+  è¾“    å‡º: 
+  è¿”    å›: 
+  ä¿®æ”¹è®°å½•: 
  *******************************************************/
 int GetLogTime(char *szStr, int strLen)
 {
@@ -81,12 +81,12 @@ int GetLogTime(char *szStr, int strLen)
 }
 
 /*******************************************************
-  º¯ Êı Ãû: GetLogFileNameAndLine
-  Ãè    Êö: »ñÈ¡ÎÄ¼şÃûºÍĞĞºÅ
-  Êä    Èë: 
-  Êä    ³ö: 
-  ·µ    »Ø: 
-  ĞŞ¸Ä¼ÇÂ¼: 
+  å‡½ æ•° å: GetLogFileNameAndLine
+  æ    è¿°: è·å–æ–‡ä»¶åå’Œè¡Œå·
+  è¾“    å…¥: 
+  è¾“    å‡º: 
+  è¿”    å›: 
+  ä¿®æ”¹è®°å½•: 
  *******************************************************/
 int GetLogFileNameAndLine(char *szStr, int strLen, const char *file, int line)
 {
@@ -101,12 +101,12 @@ int GetLogFileNameAndLine(char *szStr, int strLen, const char *file, int line)
 }
 
 /*******************************************************
-  º¯ Êı Ãû: PrintLogEx
-  Ãè    Êö: ´òÓ¡ÈÕÖ¾
-  Êä    Èë: 
-  Êä    ³ö: 
-  ·µ    »Ø: 
-  ĞŞ¸Ä¼ÇÂ¼: 
+  å‡½ æ•° å: PrintLogEx
+  æ    è¿°: æ‰“å°æ—¥å¿—
+  è¾“    å…¥: 
+  è¾“    å‡º: 
+  è¿”    å›: 
+  ä¿®æ”¹è®°å½•: 
  *******************************************************/
 void PrintLogEx(const char *info, LOG_PRINT print, LOG_PARA para, const char *file, int line)
 {
@@ -135,32 +135,32 @@ void PrintLogEx(const char *info, LOG_PRINT print, LOG_PARA para, const char *fi
 }
 
 /*******************************************************
-  º¯ Êı Ãû: PrintBufferEx
-  Ãè    Êö: ´òÓ¡ÄÚ´æ
-  Êä    Èë: 
-  Êä    ³ö: 
-  ·µ    »Ø: 
-  ĞŞ¸Ä¼ÇÂ¼: 
+  å‡½ æ•° å: PrintBufferEx
+  æ    è¿°: æ‰“å°å†…å­˜
+  è¾“    å…¥: 
+  è¾“    å‡º: 
+  è¿”    å›: 
+  ä¿®æ”¹è®°å½•: 
  *******************************************************/
 void PrintBufferEx(const char *info, const void *buf, size_t len, LOG_PRINT print, LOG_PARA para, const char *file, int line)
 {
     if (!buf || !len || !print) return;
 
-    char szLine[84]; // 80¸ö×Ö·û¸ÕºÃÂú×ãÒ»ĞĞ16¸ö×Ö½ÚµÄ´òÓ¡
-    char szByte[20]; // 16¸ö×Ö½ÚµÄ×Ö·ûÏÔÊ¾
+    char szLine[84]; // 80ä¸ªå­—ç¬¦åˆšå¥½æ»¡è¶³ä¸€è¡Œ16ä¸ªå­—èŠ‚çš„æ‰“å°
+    char szByte[20]; // 16ä¸ªå­—èŠ‚çš„å­—ç¬¦æ˜¾ç¤º
     size_t offset = 0;
 
     PrintLogEx(info, print, para, file, line);
 
     for (size_t i = 0; i < len; ++i)
     {
-        /// ¿ªÍ·µÄ´¦Àí
+        /// å¼€å¤´çš„å¤„ç†
         if ((i % 16) == 0)
         {
             offset = (size_t)snprintf(szLine, sizeof(szLine), "0x%08x: ", (unsigned int)i);
         }
 
-        /// ÖĞ¼äµÄ´¦Àí
+        /// ä¸­é—´çš„å¤„ç†
         BYTE *pbyTmp = (BYTE *)buf;
         offset += (size_t)snprintf(szLine + offset, sizeof(szLine) - offset, "%02x ", pbyTmp[i]);
         if (isprint(pbyTmp[i]))
@@ -172,7 +172,7 @@ void PrintBufferEx(const char *info, const void *buf, size_t len, LOG_PRINT prin
             szByte[i % 16] = '.';
         }
 
-        /// ×îºóµÄ´¦Àí
+        /// æœ€åçš„å¤„ç†
         if (((i % 16) == 15) || (i == (len - 1)))
         {
             size_t differ = 15 - (i % 16);
@@ -190,12 +190,12 @@ void PrintBufferEx(const char *info, const void *buf, size_t len, LOG_PRINT prin
 }
 
 /*******************************************************
-  º¯ Êı Ãû: PrintToConsole
-  Ãè    Êö: Ïò¿ØÖÆÌ¨´òÓ¡
-  Êä    Èë: 
-  Êä    ³ö: 
-  ·µ    »Ø: 
-  ĞŞ¸Ä¼ÇÂ¼: 
+  å‡½ æ•° å: PrintToConsole
+  æ    è¿°: å‘æ§åˆ¶å°æ‰“å°
+  è¾“    å…¥: 
+  è¾“    å‡º: 
+  è¿”    å›: 
+  ä¿®æ”¹è®°å½•: 
  *******************************************************/
 void PrintToConsole(const char *info, void *)
 {
@@ -205,29 +205,29 @@ void PrintToConsole(const char *info, void *)
 }
 
 /*******************************************************
-  º¯ Êı Ãû: TraceLogEx
-  Ãè    Êö: ¼ÇÂ¼ĞÅÏ¢µ½ÈÕÖ¾
-  Êä    Èë: 
-  Êä    ³ö: 
-  ·µ    »Ø: 
-  ĞŞ¸Ä¼ÇÂ¼: 
+  å‡½ æ•° å: TraceLogEx
+  æ    è¿°: è®°å½•ä¿¡æ¯åˆ°æ—¥å¿—
+  è¾“    å…¥: 
+  è¾“    å‡º: 
+  è¿”    å›: 
+  ä¿®æ”¹è®°å½•: 
  *******************************************************/
 void TraceLogEx(const char *info, const char *file, int line)
 {
-    /// infoÎª¿Õ£¬Ò²´òÓ¡ÎÄ¼şÃûºÍĞĞºÅ
+    /// infoä¸ºç©ºï¼Œä¹Ÿæ‰“å°æ–‡ä»¶åå’Œè¡Œå·
 
     if (!g_debug_switch)
     {
         return;
     }
 
-    /// ºÏ²¢ÊäÈëĞÅÏ¢ºÍÈÕÆÚ
+    /// åˆå¹¶è¾“å…¥ä¿¡æ¯å’Œæ—¥æœŸ
     char szStr[STR_FORMAT_LEN_MAX];
     int pos = GetLogTime(szStr, sizeof(szStr));
     pos += snprintf(szStr+pos, sizeof(szStr)-pos, "%s", info);
     pos += GetLogFileNameAndLine(szStr+pos, sizeof(szStr)-pos, file, line);
 
-    /// Ğ´Èëtrace.logÎÄ¼ş
+    /// å†™å…¥trace.logæ–‡ä»¶
     if (g_debug_switch & LOG_OUT_FILE)
     {
         if (!sg_pTraceLog)
@@ -241,7 +241,7 @@ void TraceLogEx(const char *info, const char *file, int line)
         sg_pTraceLog->Write(szStr);
     }
 
-    /// ÒÔprintf·½Ê½Êä³ö
+    /// ä»¥printfæ–¹å¼è¾“å‡º
     if (g_debug_switch & LOG_OUT_PRINT)
     {
         printf("%s\r\n", szStr);
@@ -249,12 +249,12 @@ void TraceLogEx(const char *info, const char *file, int line)
 }
 
 /*******************************************************
-  º¯ Êı Ãû: TraceBufEx
-  Ãè    Êö: ¼ÇÂ¼ÄÚ´æµ½ÈÕÖ¾
-  Êä    Èë: 
-  Êä    ³ö: 
-  ·µ    »Ø: 
-  ĞŞ¸Ä¼ÇÂ¼: 
+  å‡½ æ•° å: TraceBufEx
+  æ    è¿°: è®°å½•å†…å­˜åˆ°æ—¥å¿—
+  è¾“    å…¥: 
+  è¾“    å‡º: 
+  è¿”    å›: 
+  ä¿®æ”¹è®°å½•: 
  *******************************************************/
 void TraceBufEx(const char *info, const void *buf, size_t len, const char *file, int line)
 {
@@ -263,7 +263,7 @@ void TraceBufEx(const char *info, const void *buf, size_t len, const char *file,
         return;
     }
 
-    /// Ğ´Èëtrace.logÎÄ¼ş
+    /// å†™å…¥trace.logæ–‡ä»¶
     if (g_debug_switch & LOG_OUT_FILE)
     {
         if (!sg_pTraceLog)
@@ -277,7 +277,7 @@ void TraceBufEx(const char *info, const void *buf, size_t len, const char *file,
         sg_pTraceLog->Write(info, buf, len, file, line);
     }
 
-    /// ÒÔprintf·½Ê½Êä³ö
+    /// ä»¥printfæ–¹å¼è¾“å‡º
     if (g_debug_switch & LOG_OUT_PRINT)
     {
         PrintBufferEx(info, buf, len, PrintToConsole, 0, file, line);
@@ -285,12 +285,12 @@ void TraceBufEx(const char *info, const void *buf, size_t len, const char *file,
 }
 
 /*******************************************************
-  º¯ Êı Ãû: CheckRetCodeEx
-  Ãè    Êö: ¼ì²é·µ»ØÖµ
-  Êä    Èë: 
-  Êä    ³ö: 
-  ·µ    »Ø: 
-  ĞŞ¸Ä¼ÇÂ¼: 
+  å‡½ æ•° å: CheckRetCodeEx
+  æ    è¿°: æ£€æŸ¥è¿”å›å€¼
+  è¾“    å…¥: 
+  è¾“    å‡º: 
+  è¿”    å›: 
+  ä¿®æ”¹è®°å½•: 
  *******************************************************/
 void CheckRetCodeEx(int rc, int expect, const char *info, const char *file, int line)
 {
@@ -314,7 +314,7 @@ void CheckRetCodeEx(int rc, int expect, const char *info, const char *file, int 
 
     sg_pCheckLog->Write(szStr);
 
-    /// ÒÔprintf·½Ê½Êä³ö
+    /// ä»¥printfæ–¹å¼è¾“å‡º
     if (g_debug_switch & LOG_OUT_PRINT)
     {
         printf("%s\r\n", szStr);
@@ -322,12 +322,12 @@ void CheckRetCodeEx(int rc, int expect, const char *info, const char *file, int 
 }
 
 /*******************************************************
-  º¯ Êı Ãû: CheckErrCodeEx
-  Ãè    Êö: ¼ì²é´íÎóÖµ
-  Êä    Èë: 
-  Êä    ³ö: 
-  ·µ    »Ø: 
-  ĞŞ¸Ä¼ÇÂ¼: 
+  å‡½ æ•° å: CheckErrCodeEx
+  æ    è¿°: æ£€æŸ¥é”™è¯¯å€¼
+  è¾“    å…¥: 
+  è¾“    å‡º: 
+  è¿”    å›: 
+  ä¿®æ”¹è®°å½•: 
  *******************************************************/
 void CheckErrCodeEx(int rc, int expect, const char *info, const char *file, int line)
 {
@@ -355,7 +355,7 @@ void CheckErrCodeEx(int rc, int expect, const char *info, const char *file, int 
         sg_pErrLog->Write(szStr);
     }
 
-    /// ÒÔprintf·½Ê½Êä³ö
+    /// ä»¥printfæ–¹å¼è¾“å‡º
     if (g_debug_switch & LOG_OUT_PRINT)
     {
         printf("%s\r\n", szStr);
@@ -364,19 +364,19 @@ void CheckErrCodeEx(int rc, int expect, const char *info, const char *file, int 
 }
 
 /*******************************************************
-  º¯ Êı Ãû: HandleSysErrLog
-  Ãè    Êö: ´¦ÀíÏµÍ³´íÎó¼ÇÂ¼
-  Êä    Èë: 
-  Êä    ³ö: 
-  ·µ    »Ø: 
-  ĞŞ¸Ä¼ÇÂ¼: 
+  å‡½ æ•° å: HandleSysErrLog
+  æ    è¿°: å¤„ç†ç³»ç»Ÿé”™è¯¯è®°å½•
+  è¾“    å…¥: 
+  è¾“    å‡º: 
+  è¿”    å›: 
+  ä¿®æ”¹è®°å½•: 
  *******************************************************/
 void HandleSysErrLog(int error)
 {
 #if DCOP_OS == DCOP_OS_WINDOWS
 #elif DCOP_OS == DCOP_OS_LINUX
 
-    signal(error, SIG_DFL); // »¹Ô­Ä¬ÈÏµÄĞÅºÅ´¦Àíhandler
+    signal(error, SIG_DFL); // è¿˜åŸé»˜è®¤çš„ä¿¡å·å¤„ç†handler
 
 #endif
 
@@ -385,19 +385,19 @@ void HandleSysErrLog(int error)
 }
 
 /*******************************************************
-  º¯ Êı Ãû: SetSysErrHandler
-  Ãè    Êö: ÉèÖÃÏµÍ³´íÎó´¦Àí
-  Êä    Èë: 
-  Êä    ³ö: 
-  ·µ    »Ø: 
-  ĞŞ¸Ä¼ÇÂ¼: 
+  å‡½ æ•° å: SetSysErrHandler
+  æ    è¿°: è®¾ç½®ç³»ç»Ÿé”™è¯¯å¤„ç†
+  è¾“    å…¥: 
+  è¾“    å‡º: 
+  è¿”    å›: 
+  ä¿®æ”¹è®°å½•: 
  *******************************************************/
 void SetSysErrHandler()
 {
 #if DCOP_OS == DCOP_OS_WINDOWS
 #elif DCOP_OS == DCOP_OS_LINUX
 
-    /// ÉèÖÃĞÅºÅµÄ´¦Àíº¯Êı
+    /// è®¾ç½®ä¿¡å·çš„å¤„ç†å‡½æ•°
     signal(SIGSEGV, HandleSysErrLog); // SIGSEGV    11       Core Invalid memory reference
     signal(SIGABRT, HandleSysErrLog); // SIGABRT     6       Core Abort signal from
 
@@ -406,18 +406,18 @@ void SetSysErrHandler()
 
 
 /// -------------------------------------------------
-/// È«¾ÖÈÕÖ¾ÈİÆ÷
+/// å…¨å±€æ—¥å¿—å®¹å™¨
 /// -------------------------------------------------
 CLog::MAP_LOGS CLog::sm_logs;
 
 
 /*******************************************************
-  º¯ Êı Ãû: CLog::CLog
-  Ãè    Êö: CLog¹¹Ôì
-  Êä    Èë: 
-  Êä    ³ö: 
-  ·µ    »Ø: 
-  ĞŞ¸Ä¼ÇÂ¼: 
+  å‡½ æ•° å: CLog::CLog
+  æ    è¿°: CLogæ„é€ 
+  è¾“    å…¥: 
+  è¾“    å‡º: 
+  è¿”    å›: 
+  ä¿®æ”¹è®°å½•: 
  *******************************************************/
 CLog::CLog(const char *szFileName)
 {
@@ -429,12 +429,12 @@ CLog::CLog(const char *szFileName)
 }
 
 /*******************************************************
-  º¯ Êı Ãû: CLog::~CLog
-  Ãè    Êö: CLogÎö¹¹
-  Êä    Èë: 
-  Êä    ³ö: 
-  ·µ    »Ø: 
-  ĞŞ¸Ä¼ÇÂ¼: 
+  å‡½ æ•° å: CLog::~CLog
+  æ    è¿°: CLogææ„
+  è¾“    å…¥: 
+  è¾“    å‡º: 
+  è¿”    å›: 
+  ä¿®æ”¹è®°å½•: 
  *******************************************************/
 CLog::~CLog()
 {
@@ -446,12 +446,12 @@ CLog::~CLog()
 }
 
 /*******************************************************
-  º¯ Êı Ãû: CLog::Init
-  Ãè    Êö: ³õÊ¼»¯ÈÕÖ¾
-  Êä    Èë: 
-  Êä    ³ö: 
-  ·µ    »Ø: 
-  ĞŞ¸Ä¼ÇÂ¼: 
+  å‡½ æ•° å: CLog::Init
+  æ    è¿°: åˆå§‹åŒ–æ—¥å¿—
+  è¾“    å…¥: 
+  è¾“    å‡º: 
+  è¿”    å›: 
+  ä¿®æ”¹è®°å½•: 
  *******************************************************/
 CLog *CLog::Init(DWORD dwID, const char *szFileName)
 {
@@ -475,12 +475,12 @@ CLog *CLog::Init(DWORD dwID, const char *szFileName)
 }
 
 /*******************************************************
-  º¯ Êı Ãû: CLog::Get
-  Ãè    Êö: »ñÈ¡ÈÕÖ¾
-  Êä    Èë: 
-  Êä    ³ö: 
-  ·µ    »Ø: 
-  ĞŞ¸Ä¼ÇÂ¼: 
+  å‡½ æ•° å: CLog::Get
+  æ    è¿°: è·å–æ—¥å¿—
+  è¾“    å…¥: 
+  è¾“    å‡º: 
+  è¿”    å›: 
+  ä¿®æ”¹è®°å½•: 
  *******************************************************/
 CLog *CLog::Get(DWORD dwID)
 {
@@ -496,12 +496,12 @@ CLog *CLog::Get(DWORD dwID)
 }
 
 /*******************************************************
-  º¯ Êı Ãû: CLog::Write
-  Ãè    Êö: ¼ÇÂ¼ĞÅÏ¢µ½ÈÕÖ¾
-  Êä    Èë: 
-  Êä    ³ö: 
-  ·µ    »Ø: 
-  ĞŞ¸Ä¼ÇÂ¼: 
+  å‡½ æ•° å: CLog::Write
+  æ    è¿°: è®°å½•ä¿¡æ¯åˆ°æ—¥å¿—
+  è¾“    å…¥: 
+  è¾“    å‡º: 
+  è¿”    å›: 
+  ä¿®æ”¹è®°å½•: 
  *******************************************************/
 void CLog::Write(const char *info, bool newline)
 {
@@ -531,12 +531,12 @@ void CLog::Write(const char *info, bool newline)
 }
 
 /*******************************************************
-  º¯ Êı Ãû: CLog::Write
-  Ãè    Êö: ¼ÇÂ¼ÄÚ´æµ½ÈÕÖ¾
-  Êä    Èë: 
-  Êä    ³ö: 
-  ·µ    »Ø: 
-  ĞŞ¸Ä¼ÇÂ¼: 
+  å‡½ æ•° å: CLog::Write
+  æ    è¿°: è®°å½•å†…å­˜åˆ°æ—¥å¿—
+  è¾“    å…¥: 
+  è¾“    å‡º: 
+  è¿”    å›: 
+  ä¿®æ”¹è®°å½•: 
  *******************************************************/
 void CLog::Write(const char *info, const void *buf, size_t len, const char *file, int line)
 {
@@ -546,12 +546,12 @@ void CLog::Write(const char *info, const void *buf, size_t len, const char *file
 }
 
 /*******************************************************
-  º¯ Êı Ãû: CLog::PrintCallBack
-  Ãè    Êö: ÄÚ´æ´òÓ¡»Øµ÷
-  Êä    Èë: 
-  Êä    ³ö: 
-  ·µ    »Ø: 
-  ĞŞ¸Ä¼ÇÂ¼: 
+  å‡½ æ•° å: CLog::PrintCallBack
+  æ    è¿°: å†…å­˜æ‰“å°å›è°ƒ
+  è¾“    å…¥: 
+  è¾“    å‡º: 
+  è¿”    å›: 
+  ä¿®æ”¹è®°å½•: 
  *******************************************************/
 void CLog::PrintCallBack(const char *info, void *para)
 {
