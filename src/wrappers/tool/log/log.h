@@ -1,5 +1,5 @@
 /// -------------------------------------------------
-/// log.h : ÈÕÖ¾·â×°¹«¹²Í·ÎÄ¼ş
+/// log.h : æ—¥å¿—å°è£…å…¬å…±å¤´æ–‡ä»¶
 /// -------------------------------------------------
 /// Copyright (c) 2015, Wang Yujia <combo.xy@163.com>
 /// All rights reserved.
@@ -14,7 +14,7 @@
 #include "sem.h"
 
 
-/// ÈÕÖ¾ID¶¨Òå
+/// æ—¥å¿—IDå®šä¹‰
 enum LOG_ID
 {
     LOG_ID_ERRLOG = 1,
@@ -23,12 +23,12 @@ enum LOG_ID
     LOG_ID_MEMLOG
 };
 
-/// ÈÕÖ¾Êä³ö·½Ê½
-#define LOG_OUT_NULL    0   // ²»½øĞĞÊä³ö
-#define LOG_OUT_FILE    1   // Êä³öµ½ÎÄ¼şÖĞ
-#define LOG_OUT_PRINT   2   // ÒÔprintf·½Ê½Êä³ö
+/// æ—¥å¿—è¾“å‡ºæ–¹å¼
+#define LOG_OUT_NULL    0   // ä¸è¿›è¡Œè¾“å‡º
+#define LOG_OUT_FILE    1   // è¾“å‡ºåˆ°æ–‡ä»¶ä¸­
+#define LOG_OUT_PRINT   2   // ä»¥printfæ–¹å¼è¾“å‡º
 
-/// ÎÄ¼şÃû³¤¶È
+/// æ–‡ä»¶åé•¿åº¦
 #define LOG_FILENAME_LEN_MAX    32
 
 
