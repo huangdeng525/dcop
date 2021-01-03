@@ -32,9 +32,28 @@ public:
     }
 };
 
+
+AutoFile
+{
+private:
+    FILE *m_FP;
+public:
+    AutoFile(FILE *pFP):m_FP(pFP);
+    ~AutoFile()
+    {
+        if(m_FP != nullptr)
+        {
+            fclose(m_FP);
+        }
+    }
+};
+
+
 class CNewLog
 {
 public:
+    // 创建一个简单的日志文件，strlogName是日志文件的全路径名
+    // 默认大小100K时进行一次备份，文件名加上.bak
     static std::shared_ptr<CNewLog> build(std::string &strlogName)
     {
         return std::make_shared<CNewLog>(strlogName);
@@ -50,9 +69,10 @@ protected:
     ~CNewLog(){};
 
 private:
-
+    void CheckLogSize();
     std::shared_ptr<objLock> m_pLock;
     std:: string m_strLogName;
+    int m_maxLogLen;
 };
 
 

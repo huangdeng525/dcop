@@ -17,51 +17,27 @@
 #endif
 
 
-/// -------------------------------------------------
-/// 跟踪信息开关
-/// -------------------------------------------------
-int g_debug_switch =
-#ifdef DEBUG
-    LOG_OUT_FILE;
-#else
-    LOG_OUT_NULL;
-#endif
-
-/*******************************************************
-  函 数 名: CLog::CLog
-  描    述: CLog构造
-  输    入:
-  输    出:
-  返    回:
-  修改记录:
- *******************************************************/
 CNewLog::CNewLog(std::string &strlogName)
 :m_strLogName(strlogName)
+,m_maxLogLen(100000)
 {
     m_pLock = std::make_shared<objLock> (objLock::CreateInstance(szFileName, __LINE__));
 }
 
-/*******************************************************
-  函 数 名: CLog::Write
-  描    述: 记录信息到日志
-  输    入:
-  输    出:
-  返    回:
-  修改记录:
- *******************************************************/
+// 记录信息到日志，自动检查文件大小进行备份
 void CNewLog::Write(const char *info)
 {
     if (!info || !(*info)) return;
 
     AutoLocker<CNewLog> autoLocker(*this);
+    CheckLogSize();
 
-    FILE *fp;
-
-    fp = fopen(m_strLogName.c_str() , "a+b");
-    if (!fp)
+    FILE *fp = fopen(m_strLogName.c_str() , "a+b");
+    if (fp == nullptr)
     {
         return;
     }
+    AutoFile autofile(fp);
 
     bool newline = true;
 
@@ -71,5 +47,30 @@ void CNewLog::Write(const char *info)
     }
 
     fprintf(fp, ((newline)? "%s\r\n" : "%s"), info);
-    fclose(fp);
+}
+
+// 检查日志文件大小，超大则重命名为.bak的一个日志文件，当前大小暂定为100k
+// 内部接口，不保护，由调用方负责
+void CNewLog::CheckLogSize()
+{
+    {
+        fp = fopen(m_strLogName.c_str() , "a+b");
+        if (fp == nullptr)
+        {
+            return;
+        }
+        AutoFile autofile(fp);
+
+        fseek(fp, 0, SEEK_END); //定位到文件末
+        int nFileLen = ftell(fp); //文件长度
+        if (nFileLen < m_maxLogLen)
+        {
+            return;
+        }
+    }
+
+    std::string bak_log_name(m_strLogName + '.bak');
+
+    (void)remove(bak_log_name.c_str());
+    (void)rename(m_strLogName.c_str(), bak_log_name.c_str());        
 }
